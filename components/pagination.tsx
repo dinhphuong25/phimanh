@@ -123,28 +123,28 @@ export default function PaginationComponent() {
 
   return (
     <Pagination>
-      <PaginationContent className="justify-center gap-2 py-4">
+      <PaginationContent className="justify-center gap-2 py-2">
         <PaginationItem>
           <PaginationPrevious
             href={`${pathname}?${createQueryString(
               Math.max(1, pageInfo.currentPage - 1)
             )}`}
             isActive={pageInfo.currentPage > 1}
-            className="rounded-lg px-3 py-1 font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            className="rounded-lg px-4 py-2 font-medium text-gray-300 bg-gray-800/50 hover:bg-gray-700 border border-white/10 transition-colors"
           />
         </PaginationItem>
 
         {getVisiblePages().map((page, index) =>
           page === "..." ? (
             <PaginationItem key={index}>
-              <PaginationEllipsis className="px-2 text-gray-400" />
+              <PaginationEllipsis className="px-2 text-gray-500" />
             </PaginationItem>
           ) : (
             <PaginationItem key={index}>
               <PaginationLink
                 href={`${pathname}?${createQueryString(page as number)}`}
                 isActive={pageInfo.currentPage === page}
-                className={`rounded-lg px-3 py-1 font-medium transition-colors ${pageInfo.currentPage === page ? "bg-blue-600 text-white" : "text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"}`}
+                className={`rounded-lg px-4 py-2 font-medium transition-all ${pageInfo.currentPage === page ? "bg-primary text-white shadow-lg shadow-primary/30" : "text-gray-300 bg-gray-800/50 hover:bg-gray-700 border border-white/10"}`}
               >
                 {page}
               </PaginationLink>
@@ -158,7 +158,7 @@ export default function PaginationComponent() {
               Math.min(pageInfo.totalPages, pageInfo.currentPage + 1)
             )}`}
             isActive={pageInfo.currentPage < pageInfo.totalPages}
-            className="rounded-lg px-3 py-1 font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            className="rounded-lg px-4 py-2 font-medium text-gray-300 bg-gray-800/50 hover:bg-gray-700 border border-white/10 transition-colors"
           />
         </PaginationItem>
       </PaginationContent>

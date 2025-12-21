@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { 
-  Fade, 
-  Slide, 
-  Grow, 
-  Zoom, 
+import { createPortal } from 'react-dom';
+import {
+  Fade,
+  Slide,
+  Grow,
+  Zoom,
   Collapse,
   Backdrop
 } from '@mui/material';
@@ -32,11 +33,11 @@ const RippleContainer = styled('span')({
   overflow: 'hidden',
 });
 
-const RippleElement = styled('span')<{ 
-  x: number; 
-  y: number; 
-  size: number; 
-  animate: boolean; 
+const RippleElement = styled('span')<{
+  x: number;
+  y: number;
+  size: number;
+  animate: boolean;
 }>(({ x, y, size, animate }) => ({
   position: 'absolute',
   left: x - size / 2,
@@ -56,10 +57,10 @@ interface MaterialRippleProps {
   className?: string;
 }
 
-export const MaterialRipple: React.FC<MaterialRippleProps> = ({ 
-  children, 
+export const MaterialRipple: React.FC<MaterialRippleProps> = ({
+  children,
   disabled = false,
-  className 
+  className
 }) => {
   const [ripples, setRipples] = useState<Array<{
     key: number;
@@ -143,7 +144,7 @@ export const StaggeredAnimation: React.FC<StaggeredAnimationProps> = ({
 
   const renderChild = (child: React.ReactElement, index: number) => {
     const isVisible = visibleItems.has(index);
-    
+
     switch (animation) {
       case 'fade':
         return (
@@ -153,9 +154,9 @@ export const StaggeredAnimation: React.FC<StaggeredAnimationProps> = ({
         );
       case 'slide':
         return (
-          <Slide 
-            key={index} 
-            in={isVisible} 
+          <Slide
+            key={index}
+            in={isVisible}
             timeout={600}
             direction={direction}
           >
@@ -221,12 +222,12 @@ const FloatingButton = styled('button')<{ visible: boolean }>(({ theme, visible 
   transform: visible ? 'scale(1)' : 'scale(0)',
   opacity: visible ? 1 : 0,
   animation: visible ? `${fabAnimation} 0.5s ease-out` : 'none',
-  
+
   '&:hover': {
     transform: visible ? 'scale(1.1)' : 'scale(0)',
     boxShadow: '0 6px 16px rgba(0, 0, 0, 0.4)',
   },
-  
+
   '&:active': {
     transform: visible ? 'scale(0.95)' : 'scale(0)',
   },
@@ -238,10 +239,10 @@ interface MaterialFABProps {
   onClick?: () => void;
 }
 
-export const MaterialFAB: React.FC<MaterialFABProps> = ({ 
-  children, 
+export const MaterialFAB: React.FC<MaterialFABProps> = ({
+  children,
   visible = true,
-  onClick 
+  onClick
 }) => {
   return (
     <FloatingButton visible={visible} onClick={onClick}>
@@ -305,8 +306,8 @@ export const MaterialPageTransition: React.FC<PageTransitionProps> = ({
   }, []);
 
   return (
-    <Slide 
-      in={isVisible} 
+    <Slide
+      in={isVisible}
       direction={direction === 'horizontal' ? 'left' : 'up'}
       timeout={500}
     >
@@ -353,34 +354,65 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
   onClose,
   children
 }) => {
-  return (
-    <Backdrop
-      sx={{
-        color: '#fff',
-        zIndex: (theme) => theme.zIndex.drawer + 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        backdropFilter: 'blur(4px)',
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
+
+  if (!open || !mounted) return null;
+
+  const modalContent = (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        backdropFilter: 'blur(8px)',
       }}
-      open={open}
       onClick={onClose}
     >
       <Zoom in={open} timeout={300}>
         <div
           onClick={(e) => e.stopPropagation()}
           style={{
-            backgroundColor: 'hsl(var(--card))',
+            backgroundColor: 'hsl(222 47% 11%)',
             borderRadius: 16,
-            padding: 24,
-            maxWidth: '90vw',
-            maxHeight: '90vh',
+            padding: 16,
+            width: 'calc(100% - 32px)',
+            maxWidth: 550,
+            maxHeight: '80vh',
             overflow: 'auto',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)',
+            margin: '16px',
           }}
         >
           {children}
         </div>
       </Zoom>
-    </Backdrop>
+    </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 // Scroll reveal animation hook

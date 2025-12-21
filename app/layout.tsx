@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     "xem phim online", "phim hay 2024", "phimanhd"
   ],
   metadataBase: new URL("https://phimanh.netlify.app"),
-  
+
   // Enhanced Open Graph
   openGraph: {
     title: "Phim Ảnh - Kho phim HD chất lượng cao miễn phí",
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
       },
     ],
   },
-  
+
   // Enhanced Twitter Card
   twitter: {
     card: "summary_large_image",
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     description: "Kho phim ảnh HD chất lượng cao với hơn 50,000+ bộ phim thuộc mọi thể loại.",
     images: ["/twitter-image.jpg"],
   },
-  
+
   // Additional metadata
   applicationName: "Phim Ảnh",
   referrer: "origin-when-cross-origin",
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
   publisher: "Phim Ảnh",
   category: "Entertainment",
   classification: "Movie Streaming Website",
-  
+
   robots: {
     index: true,
     follow: true,
@@ -77,13 +77,13 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  
+
   // Verification
   verification: {
     google: "your-google-verification-code",
     yandex: "your-yandex-verification-code",
   },
-  
+
   // Additional SEO
   alternates: {
     canonical: "https://phimanh.netlify.app",
@@ -165,8 +165,8 @@ export default function RootLayout({
                 try {
                   // Initialize theme consistently for SSR/CSR
                   var savedTheme = null;
-                  var systemTheme = 'light';
-                  var finalTheme = 'light'; // Default fallback
+                  var systemTheme = 'dark';
+                  var finalTheme = 'dark'; // Default to dark for cinematic theme
                   
                   // Safely access localStorage
                   if (typeof Storage !== 'undefined' && typeof localStorage !== 'undefined') {
@@ -178,20 +178,20 @@ export default function RootLayout({
                     }
                   }
                   
-                  // Safely check system preference
+                  // Safely check system preference (but default to dark)
                   if (typeof window !== 'undefined' && window.matchMedia) {
                     try {
-                      systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                      systemTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
                     } catch (e) {
                       // matchMedia not available
                       console.debug('matchMedia not accessible:', e);
                     }
                   }
                   
-                  // Determine final theme with priority: saved > system > light
-                  finalTheme = savedTheme || systemTheme || 'light';
+                  // Determine final theme with priority: saved > dark (default)
+                  finalTheme = savedTheme || 'dark';
                   
-                  // Apply dark class only if theme is explicitly dark
+                  // Apply dark class (default for cinematic theme)
                   if (finalTheme === 'dark') {
                     document.documentElement.classList.add('dark');
                   } else {
@@ -250,11 +250,11 @@ export default function RootLayout({
           ></iframe>
         </noscript>
         {/* End Google Tag Manager (noscript) */}
-        
+
         {/* Structured Data */}
         <WebsiteStructuredData url="https://phimanh.netlify.app" />
         <OrganizationStructuredData url="https://phimanh.netlify.app" />
-        
+
         <HydrationFix />
         <MaterialThemeProvider>
           <LoadingProvider>

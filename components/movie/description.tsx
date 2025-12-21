@@ -157,7 +157,7 @@ export default function Description({ movie, serverData }: any) {
 
 
         <div className="p-6 items-center">
-          <details className="cursor-pointer">
+          <details open className="cursor-pointer">
             <summary className="list-none">
               <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white mb-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors inline">
                 {movie.name}{" "}
@@ -194,8 +194,7 @@ export default function Description({ movie, serverData }: any) {
                 </Badge>
               </div>
 
-              {/* Movie Details Dropdown */}
-              <details className="mt-4 cursor-pointer">
+              <details open className="mt-4 cursor-pointer">
                 <summary className="font-semibold text-gray-900 dark:text-white text-base mb-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                   Chi tiết phim
                 </summary>

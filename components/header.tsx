@@ -6,10 +6,8 @@ import {
   MaterialRipple,
   MaterialModal,
 } from "@/components/ui/material-animations";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
-import ThemeToggle from "@/components/theme-toggle";
 import FilterPanel from "@/components/movie/filter-panel";
 import Sidebar from "@/components/sidebar";
 import Link from "next/link";
@@ -38,6 +36,16 @@ export default function Header({
   const inputRef = useRef<HTMLInputElement>(null);
   const { showLoading, hideLoading } = useLoading();
   const [showSidebar, setShowSidebar] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Scroll detection for header background
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const isActiveLink = (href: string) => {
     return pathname === href;
@@ -115,99 +123,56 @@ export default function Header({
   };
 
   return (
-    <nav className="sticky top-0 z-40 w-full glass-morphism material-elevation-2">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+    <nav className={`fixed top-0 z-50 w-full transition-all duration-300 border-b ${isScrolled ? 'bg-background/95 backdrop-blur-md border-white/10' : 'bg-transparent border-transparent'}`}>
+      <div className="container mx-auto flex h-14 sm:h-16 items-center justify-between px-2 sm:px-4">
         <div className="flex items-center">
-          <MaterialRipple>
-            <h1
-              onClick={() => {
-                showLoading();
-                try {
-                  router.push("/");
-                } finally {
-                  hideLoading();
-                }
-              }}
-              className="text-2xl font-extrabold cursor-pointer mr-6 text-primary hover:scale-105 material-transition"
-            >
-              Phim Ảnh
-            </h1>
-          </MaterialRipple>
-          {/* Main Navigation */}
-          <div className="hidden md:flex items-center space-x-6 mx-6">
-            <MaterialRipple>
-              <EnhancedButton
-                variant="text"
-                size="small"
-                onClick={() => {
-                  showLoading();
-                  try {
-                    router.push("/new-updates");
-                  } finally {
-                    hideLoading();
-                  }
-                }}
-                className={isActiveLink("/new-updates") ? "text-primary" : ""}
-              >
-                Mới cập nhật
-              </EnhancedButton>
-            </MaterialRipple>
-            {topics?.map((topic) => (
-              <MaterialRipple key={topic.slug}>
-                <EnhancedButton
-                  variant="text"
-                  size="small"
-                  onClick={() => {
-                    showLoading();
-                    try {
-                      router.push(`/?topic=${topic.slug}`);
-                    } finally {
-                      hideLoading();
-                    }
-                  }}
-                  className={isActiveTopic(topic.slug) ? "text-primary" : ""}
-                >
-                  {topic.name}
-                </EnhancedButton>
-              </MaterialRipple>
-            ))}
-            <MaterialRipple>
-              <EnhancedButton
-                variant="text"
-                size="small"
-                onClick={() => {
-                  showLoading();
-                  router.push("/recently");
-                }}
-                className={isActiveLink("/recently") ? "text-primary" : ""}
-              >
-                Đã Xem Gần Đây
-              </EnhancedButton>
-            </MaterialRipple>
-          </div>
-          {/* Desktop Filter */}
-          <div className="hidden md:flex">
-            <FilterPanel categories={categories} countries={countries} />
-          </div>
+          <Link
+            href="/"
+            onClick={() => showLoading()}
+            className="group flex items-center"
+          >
+            {/* New Creative Logo */}
+            <div className="relative flex items-center gap-1.5 sm:gap-2">
+              {/* Play button with glow */}
+              <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-primary to-rose-600 flex items-center justify-center shadow-lg shadow-primary/50 group-hover:shadow-primary/70 transition-all group-hover:scale-110">
+                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                {/* Animated ring */}
+                <div className="absolute inset-0 rounded-lg border-2 border-primary/50 animate-ping opacity-30" />
+              </div>
+
+              {/* Text */}
+              <div className="flex flex-col leading-none">
+                <span className="text-sm sm:text-base font-black text-white tracking-tight">
+                  RẠP PHIM
+                </span>
+                <span className="text-[10px] sm:text-xs font-medium text-white tracking-widest">
+                  CHILL
+                </span>
+              </div>
+            </div>
+          </Link>
+          {/* Categories hidden - only show in sidebar menu */}
         </div>
-        <div className="flex items-center space-x-2">
+
+        {/* Right side buttons */}
+        <div className="flex items-center space-x-1 sm:space-x-2">
+          {/* Menu Button */}
           <EnhancedButton
             variant="text"
             size="small"
             onClick={() => setShowSidebar(!showSidebar)}
             icon={<Menu />}
           />
-          <ThemeToggle />
+
+          {/* Search Button */}
           <EnhancedButton
             variant="text"
             size="small"
             onClick={() => setShowSearch(!showSearch)}
             icon={<Search />}
           />
-          {/* Mobile Filter Button */}
-          <div className="md:hidden">
-            <FilterPanel categories={categories} countries={countries} />
-          </div>
         </div>
       </div>
 
@@ -221,80 +186,104 @@ export default function Header({
           setShowSuggestions(false);
         }}
       >
-        <form onSubmit={handleSearch} className="w-full max-w-xl">
-          <div className="flex gap-3 relative">
-            <EnhancedInput
-              variant="search"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setHighlightedIndex(-1);
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder="Tìm phim theo tên, thể loại, năm..."
-              clearable
-              autoFocus
-              icon={<Search />}
-              className="flex-1"
-            />
-            <EnhancedButton
-              type="submit"
-              variant="contained"
-              icon={<Search />}
-            ></EnhancedButton>
-            <EnhancedButton
-              type="button"
-              variant="outlined"
-              icon={<X />}
-              onClick={() => {
-                setShowSearch(false);
-                setSearchQuery("");
-                setSuggestions([]);
-                setShowSuggestions(false);
-              }}
-            />
-          </div>
-          {/* Enhanced Suggestions dropdown */}
+        <div className="w-full max-w-2xl">
+          <form onSubmit={handleSearch}>
+            <div className="flex gap-2 sm:gap-3">
+              <EnhancedInput
+                variant="search"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setHighlightedIndex(-1);
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="Tìm phim..."
+                clearable
+                autoFocus
+                icon={<Search />}
+                className="flex-1"
+              />
+              <EnhancedButton
+                type="submit"
+                variant="contained"
+                icon={<Search />}
+              ></EnhancedButton>
+              <EnhancedButton
+                type="button"
+                variant="outlined"
+                icon={<X />}
+                onClick={() => {
+                  setShowSearch(false);
+                  setSearchQuery("");
+                  setSuggestions([]);
+                  setShowSuggestions(false);
+                }}
+              />
+            </div>
+          </form>
+
+          {/* Suggestions Grid */}
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute left-0 right-0 top-full mt-3 material-surface material-elevation-2 rounded-xl z-50 max-h-80 overflow-auto material-scrollbar">
-              {suggestions.map((item, idx) => (
-                <MaterialRipple key={item.slug}>
-                  <div
-                    className={`flex items-center gap-4 px-4 py-3 cursor-pointer material-transition ${
-                      highlightedIndex === idx
-                        ? "bg-primary/10"
-                        : "hover:bg-muted/50"
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 max-h-[60vh] overflow-y-auto">
+              {suggestions.map((item: any, idx: number) => (
+                <div
+                  key={item.slug}
+                  className={`group cursor-pointer rounded-lg overflow-hidden bg-gray-800 transition-all ${highlightedIndex === idx ? "ring-2 ring-primary" : "hover:ring-2 hover:ring-primary/50"
                     }`}
-                    onMouseDown={() => {
-                      showLoading();
-                      router.push(`/watch?slug=${item.slug}`);
-                      hideLoading();
-                      setShowSearch(false);
-                      setSearchQuery("");
-                      setSuggestions([]);
-                      setShowSuggestions(false);
-                    }}
-                  >
+                  onMouseDown={() => {
+                    showLoading();
+                    router.push(`/watch?slug=${item.slug}`);
+                    hideLoading();
+                    setShowSearch(false);
+                    setSearchQuery("");
+                    setSuggestions([]);
+                    setShowSuggestions(false);
+                  }}
+                >
+                  <div className="aspect-[2/3] relative">
                     <img
-                      src={item.poster_url}
+                      src={
+                        item.poster_url?.startsWith("http")
+                          ? item.poster_url
+                          : `https://phimimg.com/${item.poster_url}`
+                      }
                       alt={item.name}
-                      className="w-12 h-16 object-cover rounded-lg material-elevation-1"
+                      className="w-full h-full object-cover"
                     />
-                    <div className="flex-1">
-                      <div className="font-semibold text-base line-clamp-1">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                    <div className="absolute top-1 left-1">
+                      <span className="bg-primary text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
+                        {item.quality || "HD"}
+                      </span>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 p-2">
+                      <h4 className="text-white text-xs font-semibold line-clamp-2 leading-tight">
                         {item.name}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {item.year} •{" "}
-                        {item.category?.map((cat: any) => cat.name).join(", ")}
-                      </div>
+                      </h4>
+                      <p className="text-gray-400 text-[10px] mt-0.5">
+                        {item.year}
+                      </p>
                     </div>
                   </div>
-                </MaterialRipple>
+                </div>
               ))}
             </div>
           )}
-        </form>
+
+          {/* No results */}
+          {showSuggestions && suggestions.length === 0 && searchQuery.trim().length >= 2 && (
+            <div className="mt-4 text-center py-8">
+              <p className="text-gray-400">Không tìm thấy phim</p>
+            </div>
+          )}
+
+          {/* Hint */}
+          {!showSuggestions && searchQuery.trim().length < 2 && (
+            <div className="mt-4 text-center py-4">
+              <p className="text-gray-500 text-sm">Nhập ít nhất 2 ký tự để tìm kiếm</p>
+            </div>
+          )}
+        </div>
       </MaterialModal>
 
       {/* Sidebar */}
@@ -305,6 +294,6 @@ export default function Header({
         countries={countries}
         topics={topics}
       />
-    </nav>
+    </nav >
   );
 }

@@ -1,14 +1,8 @@
 import Link from "next/link";
-import MovieMinimalCard from "@/components/movie/movie-minimal";
 import {
-  MovieCardLarge,
-  MovieCardWide,
-  MovieCardCompact,
   MovieCardDefault,
 } from "@/components/movie/movie-card-variants";
-import { Card, CardContent } from "@/components/ui/enhanced-card";
 import {
-  MaterialRipple,
   ScrollReveal,
 } from "@/components/ui/material-animations";
 
@@ -21,43 +15,36 @@ interface MovieSectionProps {
   isClientSide?: boolean;
 }
 
-const buttonColors = {
-  red: "bg-red-600 hover:bg-red-700",
-  purple: "bg-purple-600 hover:bg-purple-700",
-  green: "bg-green-600 hover:bg-green-700",
-  orange: "bg-orange-600 hover:bg-orange-700",
-  pink: "bg-pink-600 hover:bg-pink-700",
-};
-
 export default function MovieSection({
   title,
   movies,
   viewAllLink,
-  buttonColor = "red",
   emptyMessage = "Chưa có phim nào",
   isClientSide = false,
 }: MovieSectionProps) {
   const content = (
-    <section className="py-8">
-      {/* Header với title và nút bên ngoài Card */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-1 h-8 bg-gradient-to-b from-red-600 to-pink-600 rounded-full"></div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+    <section className="py-2 sm:py-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3 sm:mb-6 px-1">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-1 h-5 sm:h-8 bg-primary rounded-full"></div>
+          <h2 className="text-base sm:text-xl md:text-2xl font-bold text-white tracking-wide">
             {title}
           </h2>
         </div>
         <Link
           href={viewAllLink}
-          className={`inline-flex items-center justify-center w-10 h-10 rounded-lg text-white font-semibold transition-all duration-200 hover:scale-105 shadow-md hover:shadow-lg ${buttonColors[buttonColor]}`}
+          className="text-xs sm:text-sm font-semibold text-gray-400 hover:text-primary transition-colors flex items-center gap-1 group"
         >
+          <span className="hidden sm:inline">Xem Thêm</span>
+          <span className="sm:hidden">Thêm</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth={2}
             stroke="currentColor"
-            className="w-5 h-5"
+            className="w-3 h-3 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-1"
           >
             <path
               strokeLinecap="round"
@@ -67,65 +54,34 @@ export default function MovieSection({
           </svg>
         </Link>
       </div>
-      
-      {/* Card chứa movies */}
-      <Card variant="glass" className="overflow-hidden">
-        <CardContent className="p-6">
-          <div className="flex overflow-x-auto gap-4 pb-4 md:grid md:gap-4 md:grid-cols-6 md:auto-rows-[200px] md:overflow-visible scrollbar-thin">
-            {movies && movies.length > 0 ? (
-              movies.map((movie: any, index: number) => {
-                return (
-                  <ScrollReveal
-                    key={movie.slug}
-                    animation="grow"
-                    threshold={0.1}
-                  >
-                    <div
-                      className="flex-shrink-0 transform transition-transform duration-300 w-44 md:w-auto"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <MaterialRipple>
-                        <div className="rounded-xl overflow-hidden material-elevation-1 hover:material-elevation-3 material-transition h-full">
-                          <MovieCardDefault movie={movie} />
-                        </div>
-                      </MaterialRipple>
-                    </div>
-                  </ScrollReveal>
-                );
-              })
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-8 w-8 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 4v16M17 4v16"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">
-                      {emptyMessage}
-                    </h3>
-                    <p className="text-muted-foreground">
-                      Đang tải dữ liệu hoặc chưa có phim trong danh mục này...
-                    </p>
-                  </div>
+
+      {/* Grid Layout */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
+        {movies && movies.length > 0 ? (
+          movies.map((movie: any, index: number) => {
+            return (
+              <ScrollReveal
+                key={movie.slug}
+                animation="grow"
+                threshold={0.1}
+              >
+                <div
+                  className="aspect-[2/3]"
+                  style={{ animationDelay: `${index * 0.02}s` }}
+                >
+                  <MovieCardDefault movie={movie} />
                 </div>
-              </div>
-            )}
+              </ScrollReveal>
+            );
+          })
+        ) : (
+          <div className="col-span-full text-center py-8 sm:py-12">
+            <p className="text-muted-foreground text-sm sm:text-base">
+              {emptyMessage}
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
     </section>
   );
 
@@ -139,3 +95,4 @@ export default function MovieSection({
     </ScrollReveal>
   );
 }
+
