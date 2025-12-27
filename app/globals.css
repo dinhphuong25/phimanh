@@ -1,0 +1,426 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Base Light Theme - Kept for fallback but optimized */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 346 87% 43%;
+    /* Rose 600 */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 346 87% 43%;
+
+    --radius: 1rem;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  }
+
+  .dark {
+    /* Cinematic Dark Theme - Deep Blue/Black */
+    --background: 224 71% 4%;
+    /* #020617 Slate 950 */
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 11%;
+    /* Slate 900 */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 343 100% 50%;
+    /* Vibrant Pink/Red */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 343 100% 50%;
+
+    /* Enhanced Glow Shadows */
+    --shadow-sm: 0 0 10px -5px rgba(244, 63, 94, 0.3);
+    --shadow-md: 0 0 25px -10px rgba(244, 63, 94, 0.4);
+    --shadow-lg: 0 0 50px -15px rgba(244, 63, 94, 0.5);
+    --shadow-xl: 0 0 80px -20px rgba(244, 63, 94, 0.6);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /* Font family setup */
+  html {
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    /* Prevent flash of unstyled content during hydration */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  /* Show body after hydration or fallback timeout */
+  body.hydrated,
+  body.fallback-show {
+    opacity: 1;
+  }
+
+  /* Hide browser extension attributes to prevent hydration mismatch */
+  *[bis_skin_checked],
+  *[__codelineno],
+  *[__codelineno_highlight],
+  *[data-adblock],
+  *[data-adblockkey],
+  *[cz-shortcut-listen],
+  *[data-gramm_editor],
+  *[data-new-gr-c-s-check-loaded],
+  *[data-gr-ext-installed] {
+    /* These attributes are added by browser extensions and should not affect layout */
+  }
+}
+
+/* Page transition styles to prevent layout shifts */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
+  }
+
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 30px rgba(220, 38, 38, 0.8);
+  }
+}
+
+.animate-shimmer {
+  background-size: 200% auto;
+  animation: shimmer 2s linear infinite;
+}
+
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Video.js Custom Styles */
+.video-js {
+  font-family: inherit;
+}
+
+.video-js .vjs-big-play-button {
+  font-size: 3em;
+  line-height: 1.5em;
+  height: 1.5em;
+  width: 1.5em;
+  border-radius: 50%;
+  border: 0.06666em solid #fff;
+  background-color: rgba(43, 51, 63, 0.7);
+  transition: all 0.3s ease;
+}
+
+.video-js:hover .vjs-big-play-button,
+.video-js .vjs-big-play-button:focus,
+.video-js .vjs-big-play-button:active {
+  background-color: rgba(220, 38, 38, 0.9);
+  border-color: #fff;
+}
+
+.video-js .vjs-control-bar {
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+}
+
+.video-js .vjs-slider {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.video-js .vjs-play-progress,
+.video-js .vjs-volume-level {
+  background-color: rgb(220, 38, 38);
+}
+
+.video-js .vjs-load-progress {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.video-js .vjs-load-progress div {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.video-js .vjs-button>.vjs-icon-placeholder:before {
+  line-height: 1.9;
+}
+
+/* Responsive touch targets for mobile */
+@media (max-width: 768px) {
+  .video-js .vjs-control-bar {
+    font-size: 120%;
+  }
+
+  .video-js .vjs-big-play-button {
+    font-size: 2.5em;
+  }
+}
+
+/* Custom scrollbar styles */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  @apply bg-gray-800 rounded-full;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded-full hover:bg-gray-500;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(75, 85, 99) rgb(31, 41, 55);
+}
+
+.video-container {
+  transition: opacity 0.3s ease;
+}
+
+.video-container.exiting {
+  opacity: 0;
+}
+
+/* Material Design utility classes */
+@layer utilities {
+  .material-elevation-1 {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .material-elevation-2 {
+    box-shadow: var(--shadow-md);
+  }
+
+  .material-elevation-3 {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .material-elevation-4 {
+    box-shadow: var(--shadow-xl);
+  }
+
+  .material-transition {
+    transition: all 300ms var(--ease-out-cubic);
+  }
+
+  .material-transition-fast {
+    transition: all 150ms var(--ease-out-cubic);
+  }
+
+  .material-transition-slow {
+    transition: all 500ms var(--ease-out-cubic);
+  }
+
+  .material-surface {
+    background: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border-radius: var(--radius);
+  }
+
+  .material-surface-variant {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border-radius: var(--radius);
+  }
+
+  /* Enhanced glass morphism effect */
+  .glass-morphism {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .dark .glass-morphism {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  /* Gradient backgrounds */
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+  }
+
+  .gradient-surface {
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
+  }
+
+  /* Focus states */
+  .focus-ring {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    border-radius: var(--radius);
+  }
+
+  .focus-ring:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+/* Enhanced scrollbar for Material design */
+.material-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.material-scrollbar::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+.material-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.material-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--foreground));
+}
+
+.material-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--muted));
+}
+
+/* Material Design ripple effect */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.ripple-effect:active::before {
+  width: 300px;
+  height: 300px;
+  opacity: 0.3;
+  animation: ripple 0.6s ease-out;
+}
+
+/* Animated gradient for logo */
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  animation: gradient 3s ease infinite;
+}
