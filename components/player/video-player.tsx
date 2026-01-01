@@ -288,16 +288,17 @@ const VideoPlayer = ({
   // Fullscreen change event listener
   useEffect(() => {
     const handleFullscreenChange = () => {
-      const isFullscreen = !!(
+      const isCurrentlyFullscreen = !!(
         document.fullscreenElement ||
         (document as any).webkitFullscreenElement ||
         (document as any).mozFullScreenElement ||
         (document as any).msFullscreenElement
       );
 
-      if (!isFullscreen) {
-        setIsFullscreen(false);
+      // Always sync state with actual browser fullscreen state
+      setIsFullscreen(isCurrentlyFullscreen);
 
+      if (!isCurrentlyFullscreen) {
         // Unlock orientation when exiting fullscreen via browser controls
         if (screen.orientation && (screen.orientation as any).unlock) {
           try {
@@ -306,8 +307,27 @@ const VideoPlayer = ({
             console.log('Screen orientation unlock failed:', err);
           }
         }
-      } else {
-        setIsFullscreen(true);
+
+        // Force re-layout on exit fullscreen for mobile browsers
+        if (containerRef.current) {
+          // Reset any inline styles that might have been set
+          containerRef.current.style.width = '';
+          containerRef.current.style.height = '';
+          containerRef.current.style.position = '';
+          containerRef.current.style.top = '';
+          containerRef.current.style.left = '';
+          containerRef.current.style.zIndex = '';
+
+          // Force browser to recalculate layout
+          void containerRef.current.offsetHeight;
+        }
+
+        // Also ensure video element is properly sized
+        if (videoRef.current) {
+          videoRef.current.style.width = '';
+          videoRef.current.style.height = '';
+          void videoRef.current.offsetHeight;
+        }
       }
     };
 
@@ -316,6 +336,33 @@ const VideoPlayer = ({
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    // Also listen for iOS Safari's webkitbeginfullscreen and webkitendfullscreen on video element
+    const video = videoRef.current;
+    if (video) {
+      const handleIOSFullscreenStart = () => setIsFullscreen(true);
+      const handleIOSFullscreenEnd = () => {
+        setIsFullscreen(false);
+        // Force re-layout for iOS
+        if (containerRef.current) {
+          containerRef.current.style.width = '';
+          containerRef.current.style.height = '';
+          void containerRef.current.offsetHeight;
+        }
+      };
+
+      video.addEventListener('webkitbeginfullscreen', handleIOSFullscreenStart);
+      video.addEventListener('webkitendfullscreen', handleIOSFullscreenEnd);
+
+      return () => {
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+        video.removeEventListener('webkitbeginfullscreen', handleIOSFullscreenStart);
+        video.removeEventListener('webkitendfullscreen', handleIOSFullscreenEnd);
+      };
+    }
 
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
@@ -557,10 +604,21 @@ const VideoPlayer = ({
   return (
     <div
       ref={containerRef}
+      key={isFullscreen ? 'fullscreen' : 'normal'}
+      data-fullscreen={isFullscreen}
       className={cn(
         "relative bg-black group overflow-hidden select-none",
         isFullscreen ? "w-screen h-screen fixed inset-0 z-50" : "w-full aspect-video"
       )}
+      style={!isFullscreen ? {
+        position: 'relative',
+        width: '100%',
+        height: 'auto',
+        top: 'auto',
+        left: 'auto',
+        right: 'auto',
+        bottom: 'auto',
+      } : undefined}
       onMouseMove={(e) => {
         if (e.movementX !== 0 || e.movementY !== 0) {
           showControlsHandler();
