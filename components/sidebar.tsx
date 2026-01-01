@@ -21,6 +21,7 @@ const YEAR_OPTIONS = Array.from({ length: currentYear - 1970 + 1 }, (_, i) => ({
   label: String(currentYear - i),
 }));
 
+
 export default function Sidebar({
   isOpen,
   onClose,
@@ -181,8 +182,8 @@ export default function Sidebar({
             <Link
               href="/?typeList=phim-chieu-rap"
               className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${pathname === "/" && searchParams.get("typeList") === "phim-chieu-rap"
-                  ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
+                : "hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
               onClick={() => handleLinkClick("/?typeList=phim-chieu-rap")}
             >
@@ -352,7 +353,10 @@ export default function Sidebar({
                   <Link
                     key={country.slug}
                     href={`/?country=${country.slug}`}
-                    className="block p-2 text-sm rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className={`block p-2 text-sm rounded-md transition-colors ${isActiveCountry(country.slug)
+                        ? "bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
+                        : "hover:bg-gray-50 dark:hover:bg-gray-700"
+                      }`}
                     onClick={() => handleLinkClick(`/?country=${country.slug}`)}
                   >
                     {country.name}

@@ -9,6 +9,8 @@ import EnhancedGTMTracking from "@/components/seo/enhanced-gtm";
 import MaterialThemeProvider from "@/components/providers/material-theme-provider";
 import HydrationFix from "@/components/ui/hydration-fix";
 import DevBanner from "@/components/ui/dev-banner";
+import InteractiveLuckyMoney from "@/components/interactive-lucky-money";
+import { PWAInstaller, PerformanceMonitor } from "@/components/pwa-init";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -268,6 +270,13 @@ export default function RootLayout({
         </MaterialThemeProvider>
         {/* Global Sidebar - may be modified by browser extensions */}
         <div id="sidebar-root" suppressHydrationWarning></div>
+
+        {/* Interactive Lucky Money for Tết */}
+        <InteractiveLuckyMoney />
+
+        {/* PWA & Performance Monitoring */}
+        <PWAInstaller />
+        <PerformanceMonitor />
 
         {/* Development Notice Banner */}
         <DevBanner />

@@ -117,12 +117,40 @@ const VideoPlayer = ({
     const initHls = () => {
       if (HLS.isSupported()) {
         const hls = new HLS({
+          // Performance
           enableWorker: true,
           lowLatencyMode: true,
-          backBufferLength: 90,
-          startFragPrefetch: true,
-          maxBufferLength: 30,
+
+          // Fast startup - reduce initial buffer for quicker playback start
+          maxBufferLength: 20,           // Reduced from 30 for faster startup
           maxMaxBufferLength: 600,
+
+          // Smart buffering - optimized for mobile
+          backBufferLength: 30,          // Reduced from 90 for better mobile performance
+          frontBufferFlushThreshold: 600,
+
+          // Quality & ABR (Adaptive Bitrate) - OPTIMIZED FOR BEST QUALITY & HDR
+          startLevel: -1,                // Auto-select starting quality based on bandwidth
+          abrEwmaDefaultEstimate: 10000000, // 10 Mbps initial estimate for HD/4K content
+          abrBandWidthFactor: 0.7,       // More conservative quality downgrades
+          abrBandWidthUpFactor: 0.6,     // Very aggressive quality upgrades for best viewing
+          abrEwmaFastLive: 2,            // Faster adaptation to bandwidth changes
+          abrEwmaSlowLive: 8,
+
+          // HDR & High Quality Support
+          capLevelToPlayerSize: false,   // Allow 4K/8K even on smaller screens for quality
+
+          // Fragment optimization for smooth seeking and loading
+          startFragPrefetch: true,       // Prefetch next fragment
+          maxFragLookUpTolerance: 0.25,  // Better seeking accuracy
+
+          // Loading optimizations - retry on failures
+          manifestLoadingMaxRetry: 6,
+          levelLoadingMaxRetry: 6,
+          fragLoadingMaxRetry: 6,
+
+          // Progressive web streaming
+          progressive: true,
         });
         hls.loadSource(videoUrl);
         hls.attachMedia(video);
@@ -260,7 +288,14 @@ const VideoPlayer = ({
   // Fullscreen change event listener
   useEffect(() => {
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement) {
+      const isFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+
+      if (!isFullscreen) {
         setIsFullscreen(false);
 
         // Unlock orientation when exiting fullscreen via browser controls
@@ -276,9 +311,17 @@ const VideoPlayer = ({
       }
     };
 
+    // Listen to all vendor-specific fullscreen change events
     document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
   }, []);
 
@@ -339,23 +382,70 @@ const VideoPlayer = ({
   };
 
   const toggleFullscreen = async () => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !videoRef.current) return;
 
     try {
-      if (!document.fullscreenElement) {
-        await containerRef.current.requestFullscreen();
-        setIsFullscreen(true);
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
 
-        // Lock orientation to landscape on mobile
-        if (screen.orientation && (screen.orientation as any).lock) {
-          try {
-            await (screen.orientation as any).lock('landscape');
-          } catch (err) {
-            console.log('Screen orientation lock failed:', err);
+      if (!isCurrentlyFullscreen) {
+        // Enter fullscreen
+        let fullscreenSuccess = false;
+
+        // Try standard API
+        if (containerRef.current.requestFullscreen) {
+          await containerRef.current.requestFullscreen();
+          fullscreenSuccess = true;
+        }
+        // Try webkit prefix (Safari/older Chrome)
+        else if ((containerRef.current as any).webkitRequestFullscreen) {
+          await (containerRef.current as any).webkitRequestFullscreen();
+          fullscreenSuccess = true;
+        }
+        // iOS Safari fallback - use video element's native fullscreen
+        else if ((videoRef.current as any).webkitEnterFullscreen) {
+          (videoRef.current as any).webkitEnterFullscreen();
+          fullscreenSuccess = true;
+        }
+        // Firefox
+        else if ((containerRef.current as any).mozRequestFullScreen) {
+          await (containerRef.current as any).mozRequestFullScreen();
+          fullscreenSuccess = true;
+        }
+        // IE/Edge
+        else if ((containerRef.current as any).msRequestFullscreen) {
+          await (containerRef.current as any).msRequestFullscreen();
+          fullscreenSuccess = true;
+        }
+
+        if (fullscreenSuccess) {
+          setIsFullscreen(true);
+
+          // Lock orientation to landscape on mobile
+          if (screen.orientation && (screen.orientation as any).lock) {
+            try {
+              await (screen.orientation as any).lock('landscape');
+            } catch (err) {
+              console.log('Screen orientation lock failed:', err);
+            }
           }
         }
       } else {
-        await document.exitFullscreen();
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        } else if ((document as any).mozCancelFullScreen) {
+          await (document as any).mozCancelFullScreen();
+        } else if ((document as any).msExitFullscreen) {
+          await (document as any).msExitFullscreen();
+        }
+
         setIsFullscreen(false);
 
         // Unlock orientation
@@ -484,6 +574,11 @@ const VideoPlayer = ({
         className="w-full h-full object-contain"
         poster={poster}
         playsInline
+        preload="metadata"
+        style={{
+          colorGamut: 'p3',
+          colorSpace: 'display-p3',
+        } as React.CSSProperties}
       />
 
       {/* Gesture Zones */}
@@ -604,7 +699,7 @@ const VideoPlayer = ({
 
       {/* Controls Overlay */}
       <div className={cn(
-        "absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 z-30 pointer-events-none",
+        "absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 z-50 pointer-events-none",
         showControls ? "opacity-100" : "opacity-0"
       )}>
         {/* Progress Bar Container */}
