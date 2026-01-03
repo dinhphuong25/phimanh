@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useCallback, useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLoading } from "@/components/ui/loading-context";
 
@@ -8,32 +9,88 @@ interface MovieCardProps {
   variant?: 'default' | 'large' | 'wide' | 'compact' | 'featured';
 }
 
-// Component thẻ phim kích thước lớn - nổi bật
-export function MovieCardLarge({ movie }: { movie: any }) {
-  const { showLoading, hideLoading } = useLoading();
-  const handleClick = () => {
-    showLoading();
-    try {
-      window.location.href = `/watch?slug=${movie.slug}`;
-    } finally {
-      hideLoading();
+// Lazy loaded image with intersection observer
+const LazyImage = memo(function LazyImage({ 
+  src, 
+  alt, 
+  className = "",
+  priority = false
+}: { 
+  src: string; 
+  alt: string; 
+  className?: string;
+  priority?: boolean;
+}) {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isInView, setIsInView] = useState(priority);
+  const [hasError, setHasError] = useState(false);
+  const imgRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (priority || isInView) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "100px", threshold: 0.01 }
+    );
+
+    if (imgRef.current) {
+      observer.observe(imgRef.current);
     }
-  };
+
+    return () => observer.disconnect();
+  }, [priority, isInView]);
+
+  const imageSrc = src?.startsWith("http") ? src : `https://phimimg.com/${src}`;
+
+  return (
+    <div ref={imgRef} className={`relative ${className}`}>
+      {/* Placeholder */}
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-gray-800 animate-pulse" />
+      )}
+      
+      {/* Image */}
+      {isInView && (
+        <img
+          src={hasError ? "/images/placeholder.webp" : imageSrc}
+          alt={alt}
+          loading={priority ? "eager" : "lazy"}
+          decoding="async"
+          onLoad={() => setIsLoaded(true)}
+          onError={() => setHasError(true)}
+          className={`w-full h-full object-cover transition-opacity duration-300 ${
+            isLoaded ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      )}
+    </div>
+  );
+});
+
+// Component thẻ phim kích thước lớn - nổi bật
+export const MovieCardLarge = memo(function MovieCardLarge({ movie }: { movie: any }) {
+  const { showLoading } = useLoading();
+  
+  const handleClick = useCallback(() => {
+    showLoading();
+    window.location.href = `/watch?slug=${movie.slug}`;
+  }, [movie.slug, showLoading]);
 
   return (
     <button onClick={handleClick} className="block h-full w-full text-left col-span-2 row-span-2">
       <Card className="group relative h-full overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border-2 border-transparent hover:border-red-500/50">
         <div className="relative h-full overflow-hidden rounded-xl">
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300 z-10" />
-          <img
-            src={
-              movie.poster_url.startsWith("http")
-                ? movie.poster_url
-                : `https://phimimg.com/${movie.poster_url}`
-            }
+          <LazyImage
+            src={movie.poster_url}
             alt={movie.name}
-            loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-110"
           />
           <div className="absolute top-3 right-3 bg-red-600 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg z-20">
             FEATURED
@@ -58,19 +115,16 @@ export function MovieCardLarge({ movie }: { movie: any }) {
       </Card>
     </button>
   );
-}
+});
 
 // Component thẻ phim hình chữ nhật ngang - phong cảnh
-export function MovieCardWide({ movie }: { movie: any }) {
-  const { showLoading, hideLoading } = useLoading();
-  const handleClick = () => {
+export const MovieCardWide = memo(function MovieCardWide({ movie }: { movie: any }) {
+  const { showLoading } = useLoading();
+  
+  const handleClick = useCallback(() => {
     showLoading();
-    try {
-      window.location.href = `/watch?slug=${movie.slug}`;
-    } finally {
-      hideLoading();
-    }
-  };
+    window.location.href = `/watch?slug=${movie.slug}`;
+  }, [movie.slug, showLoading]);
 
   return (
     <button onClick={handleClick} className="block h-full w-full text-left col-span-2">
@@ -78,15 +132,10 @@ export function MovieCardWide({ movie }: { movie: any }) {
         <div className="flex h-full">
           <div className="relative w-1/2 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/20 group-hover:to-black/40 transition-all duration-300 z-10" />
-            <img
-              src={
-                movie.poster_url.startsWith("http")
-                  ? movie.poster_url
-                  : `https://phimimg.com/${movie.poster_url}`
-              }
+            <LazyImage
+              src={movie.poster_url}
               alt={movie.name}
-              loading="lazy"
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full transition-transform duration-500 group-hover:scale-110"
             />
             <div className="absolute top-2 right-2 bg-purple-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg z-20">
               HD
@@ -112,33 +161,25 @@ export function MovieCardWide({ movie }: { movie: any }) {
       </Card>
     </button>
   );
-}
+});
 
 // Component thẻ phim nhỏ gọn
-export function MovieCardCompact({ movie }: { movie: any }) {
-  const { showLoading, hideLoading } = useLoading();
-  const handleClick = () => {
+export const MovieCardCompact = memo(function MovieCardCompact({ movie }: { movie: any }) {
+  const { showLoading } = useLoading();
+  
+  const handleClick = useCallback(() => {
     showLoading();
-    try {
-      window.location.href = `/watch?slug=${movie.slug}`;
-    } finally {
-      hideLoading();
-    }
-  };
+    window.location.href = `/watch?slug=${movie.slug}`;
+  }, [movie.slug, showLoading]);
 
   return (
     <button onClick={handleClick} className="block h-full w-full text-left">
       <Card className="group relative h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border border-transparent hover:border-green-500/50">
         <div className="relative aspect-[3/4] w-full overflow-hidden">
-          <img
-            src={
-              movie.poster_url.startsWith("http")
-                ? movie.poster_url
-                : `https://phimimg.com/${movie.poster_url}`
-            }
+          <LazyImage
+            src={movie.poster_url}
             alt={movie.name}
-            loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className="w-full h-full transition-transform duration-500 group-hover:scale-110"
           />
           <div className="absolute top-1 right-1 bg-green-600 text-white px-1.5 py-0.5 rounded-full text-xs font-bold shadow-lg z-20">
             HD
@@ -153,33 +194,29 @@ export function MovieCardCompact({ movie }: { movie: any }) {
       </Card>
     </button>
   );
-}
+});
 
-// Component thẻ phim mặc định (Modern Redesign)
-export function MovieCardDefault({ movie }: { movie: any }) {
-  const { showLoading, hideLoading } = useLoading();
-  const handleClick = () => {
+// Component thẻ phim mặc định (Modern Redesign) - Optimized
+export const MovieCardDefault = memo(function MovieCardDefault({ movie }: { movie: any }) {
+  const { showLoading } = useLoading();
+  
+  const handleClick = useCallback(() => {
     showLoading();
-    try {
-      window.location.href = `/watch?slug=${movie.slug}`;
-    } finally {
-      hideLoading();
-    }
-  };
+    window.location.href = `/watch?slug=${movie.slug}`;
+  }, [movie.slug, showLoading]);
+
+  const imageSrc = movie.poster_url?.startsWith("http")
+    ? movie.poster_url
+    : `https://phimimg.com/${movie.poster_url}`;
 
   return (
     <button onClick={handleClick} className="block h-full w-full text-left group">
       <div className="relative h-full w-full overflow-hidden rounded-lg sm:rounded-xl bg-gray-900 shadow-md transition-all duration-300 hover:shadow-xl hover:shadow-red-600/20 hover:-translate-y-1">
-        {/* Image */}
-        <img
-          src={
-            movie.poster_url?.startsWith("http")
-              ? movie.poster_url
-              : `https://phimimg.com/${movie.poster_url}`
-          }
+        {/* Image with lazy loading */}
+        <LazyImage
+          src={movie.poster_url}
           alt={movie.name}
-          loading="lazy"
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-95 group-hover:opacity-100"
+          className="absolute inset-0 w-full h-full transition-transform duration-500 group-hover:scale-105"
         />
 
         {/* Gradient Overlay */}
@@ -213,4 +250,4 @@ export function MovieCardDefault({ movie }: { movie: any }) {
       </div>
     </button>
   );
-}
+});

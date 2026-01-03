@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { apiCache } from "@/lib/api-cache";
 
 interface NewUpdatesData {
     movies: any[];
@@ -9,66 +10,79 @@ interface NewUpdatesData {
 }
 
 const API_BASE = "https://phimapi.com";
-const REFRESH_INTERVAL = 30000; // 30 seconds - faster updates
+const REFRESH_INTERVAL = 60000; // 60 seconds - optimized refresh interval
+const CACHE_TTL = 30000; // 30 seconds cache
 
 // Phim luôn được ghim làm phim nổi bật trên trang chủ
 const FEATURED_MOVIE_SLUG = "avatar-lua-va-tro-tan";
 
 // Fetch thông tin phim được ghim để làm hero
 async function fetchFeaturedMovie(): Promise<any | null> {
-    try {
-        const res = await fetch(`${API_BASE}/phim/${FEATURED_MOVIE_SLUG}`, {
+    const cacheKey = `featured-${FEATURED_MOVIE_SLUG}`;
+    
+    return apiCache.fetchWithCache(cacheKey, async () => {
+        try {
+            const res = await fetch(`${API_BASE}/phim/${FEATURED_MOVIE_SLUG}`, {
+                headers: {
+                    Referer: "https://phimanh.netlify.app",
+                    "User-Agent": "phimanh-bot/1.0",
+                },
+            });
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data.movie || null;
+        } catch {
+            return null;
+        }
+    }, 300000); // Cache featured movie for 5 minutes
+}
+
+async function fetchNewUpdates(): Promise<any[]> {
+    const cacheKey = "new-updates-v2";
+    
+    return apiCache.fetchWithCache(cacheKey, async () => {
+        const res = await fetch(`${API_BASE}/danh-sach/phim-moi-cap-nhat-v2?page=1&limit=30`, {
             headers: {
                 Referer: "https://phimanh.netlify.app",
                 "User-Agent": "phimanh-bot/1.0",
             },
         });
-        if (!res.ok) return null;
+        if (!res.ok) throw new Error("Failed to fetch new updates");
         const data = await res.json();
-        return data.movie || null;
-    } catch {
-        return null;
-    }
-}
+        const movies = data.items || [];
 
-async function fetchNewUpdates(): Promise<any[]> {
-    const res = await fetch(`${API_BASE}/danh-sach/phim-moi-cap-nhat-v2?page=1&limit=30`, {
-        headers: {
-            Referer: "https://phimanh.netlify.app",
-            "User-Agent": "phimanh-bot/1.0",
-        },
-    });
-    if (!res.ok) throw new Error("Failed to fetch new updates");
-    const data = await res.json();
-    const movies = data.items || [];
+        // Sort by quality - FHD first, then HD, then others
+        const qualityOrder: { [key: string]: number } = {
+            'FHD': 1,
+            'HD': 2,
+            'SD': 3,
+            'CAM': 4
+        };
 
-    // Sort by quality - FHD first, then HD, then others
-    const qualityOrder: { [key: string]: number } = {
-        'FHD': 1,
-        'HD': 2,
-        'SD': 3,
-        'CAM': 4
-    };
+        movies.sort((a: any, b: any) => {
+            const qA = qualityOrder[a.quality?.toUpperCase()] || 5;
+            const qB = qualityOrder[b.quality?.toUpperCase()] || 5;
+            return qA - qB;
+        });
 
-    movies.sort((a: any, b: any) => {
-        const qA = qualityOrder[a.quality?.toUpperCase()] || 5;
-        const qB = qualityOrder[b.quality?.toUpperCase()] || 5;
-        return qA - qB;
-    });
-
-    return movies.slice(0, 20); // Return top 20 after sorting
+        return movies.slice(0, 20);
+    }, CACHE_TTL);
 }
 
 async function fetchTopicMovies(slug: string, limit: number = 6): Promise<any[]> {
-    const res = await fetch(`${API_BASE}/v1/api/danh-sach/${slug}?page=1&limit=${limit}`, {
-        headers: {
-            Referer: "https://phimanh.netlify.app",
-            "User-Agent": "phimanh-bot/1.0",
-        },
-    });
-    if (!res.ok) throw new Error(`Failed to fetch topic: ${slug}`);
-    const data = await res.json();
-    return data.data?.items || [];
+    const cacheKey = `topic-${slug}-${limit}`;
+    
+    return apiCache.fetchWithCache(cacheKey, async () => {
+        const res = await fetch(`${API_BASE}/v1/api/danh-sach/${slug}?page=1&limit=${limit}`, {
+            headers: {
+                Referer: "https://phimanh.netlify.app",
+                "User-Agent": "phimanh-bot/1.0",
+            },
+        });
+        if (!res.ok) throw new Error(`Failed to fetch topic: ${slug}`);
+        const data = await res.json();
+        return data.data?.items || [];
+    }, 120000); // Cache topics for 2 minutes
 }
 
 export function useNewUpdates() {
@@ -80,8 +94,13 @@ export function useNewUpdates() {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     const isMounted = useRef(true);
+    const fetchInProgress = useRef(false);
 
     const fetchData = useCallback(async (isRefresh = false) => {
+        // Prevent duplicate fetches
+        if (fetchInProgress.current && !isRefresh) return;
+        fetchInProgress.current = true;
+
         try {
             if (isRefresh) {
                 setIsRefreshing(true);
@@ -107,6 +126,7 @@ export function useNewUpdates() {
                 setError(err instanceof Error ? err : new Error("Unknown error"));
             }
         } finally {
+            fetchInProgress.current = false;
             if (isMounted.current) {
                 setLoading(false);
                 setIsRefreshing(false);
@@ -115,6 +135,8 @@ export function useNewUpdates() {
     }, []);
 
     const refresh = useCallback(() => {
+        // Clear cache before refreshing
+        apiCache.delete("new-updates-v2");
         fetchData(true);
     }, [fetchData]);
 
@@ -128,10 +150,10 @@ export function useNewUpdates() {
         };
     }, [fetchData]);
 
-    // Auto-refresh
+    // Auto-refresh with optimized interval
     useEffect(() => {
         const interval = setInterval(() => {
-            if (document.visibilityState === "visible") {
+            if (document.visibilityState === "visible" && !fetchInProgress.current) {
                 fetchData(true);
             }
         }, REFRESH_INTERVAL);
@@ -144,7 +166,7 @@ export function useNewUpdates() {
         const handleVisibility = () => {
             if (document.visibilityState === "visible" && lastUpdated) {
                 const elapsed = Date.now() - lastUpdated.getTime();
-                if (elapsed > REFRESH_INTERVAL) {
+                if (elapsed > REFRESH_INTERVAL && !fetchInProgress.current) {
                     fetchData(true);
                 }
             }
@@ -154,7 +176,7 @@ export function useNewUpdates() {
         return () => document.removeEventListener("visibilitychange", handleVisibility);
     }, [lastUpdated, fetchData]);
 
-    return {
+    return useMemo(() => ({
         movies,
         heroMovie,
         loading,
@@ -162,7 +184,7 @@ export function useNewUpdates() {
         refresh,
         lastUpdated,
         isRefreshing,
-    };
+    }), [movies, heroMovie, loading, error, refresh, lastUpdated, isRefreshing]);
 }
 
 export function useTopicsWithMovies(topics: any[]) {
@@ -170,12 +192,18 @@ export function useTopicsWithMovies(topics: any[]) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const isMounted = useRef(true);
+    const fetchInProgress = useRef(false);
+
+    // Memoize topics string to prevent unnecessary re-fetches
+    const topicsKey = useMemo(() => topics.map(t => t.slug).join(','), [topics]);
 
     const fetchData = useCallback(async () => {
-        if (!topics || topics.length === 0) {
+        if (!topics || topics.length === 0 || fetchInProgress.current) {
             setLoading(false);
             return;
         }
+
+        fetchInProgress.current = true;
 
         try {
             setLoading(true);
@@ -200,11 +228,12 @@ export function useTopicsWithMovies(topics: any[]) {
                 setError(err instanceof Error ? err : new Error("Unknown error"));
             }
         } finally {
+            fetchInProgress.current = false;
             if (isMounted.current) {
                 setLoading(false);
             }
         }
-    }, [topics]);
+    }, [topicsKey]);
 
     useEffect(() => {
         isMounted.current = true;
@@ -215,24 +244,24 @@ export function useTopicsWithMovies(topics: any[]) {
         };
     }, [fetchData]);
 
-    // Auto-refresh every 5 minutes for topics
+    // Auto-refresh every 2 minutes for topics
     useEffect(() => {
         const interval = setInterval(() => {
-            if (document.visibilityState === "visible") {
+            if (document.visibilityState === "visible" && !fetchInProgress.current) {
                 fetchData();
             }
-        }, 60000); // 1 minute for topics
+        }, 120000);
 
         return () => clearInterval(interval);
     }, [fetchData]);
 
-    return { topicsData, loading, error };
+    return useMemo(() => ({ topicsData, loading, error }), [topicsData, loading, error]);
 }
 
 export function useSearchMovies(query: string, page: number = 1) {
     const [movies, setMovies] = useState<any[]>([]);
     const [pagination, setPagination] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
     const isMounted = useRef(true);
 
@@ -243,22 +272,25 @@ export function useSearchMovies(query: string, page: number = 1) {
             return;
         }
 
+        const cacheKey = `search-${query}-${page}`;
+
         try {
             setLoading(true);
 
-            const res = await fetch(
-                `${API_BASE}/v1/api/tim-kiem?keyword=${encodeURIComponent(query)}&limit=20&page=${page}`,
-                {
-                    headers: {
-                        Referer: "https://phimanh.netlify.app",
-                        "User-Agent": "phimanh-bot/1.0",
-                    },
-                }
-            );
+            const data = await apiCache.fetchWithCache(cacheKey, async () => {
+                const res = await fetch(
+                    `${API_BASE}/v1/api/tim-kiem?keyword=${encodeURIComponent(query)}&limit=20&page=${page}`,
+                    {
+                        headers: {
+                            Referer: "https://phimanh.netlify.app",
+                            "User-Agent": "phimanh-bot/1.0",
+                        },
+                    }
+                );
 
-            if (!res.ok) throw new Error("Search failed");
-
-            const data = await res.json();
+                if (!res.ok) throw new Error("Search failed");
+                return res.json();
+            }, 60000); // Cache search for 1 minute
 
             if (isMounted.current) {
                 setMovies(data.data?.items || []);
@@ -286,7 +318,7 @@ export function useSearchMovies(query: string, page: number = 1) {
         };
     }, [fetchData]);
 
-    return { movies, pagination, loading, error };
+    return useMemo(() => ({ movies, pagination, loading, error }), [movies, pagination, loading, error]);
 }
 
 export function useFilteredMovies(params: {
@@ -305,8 +337,15 @@ export function useFilteredMovies(params: {
     const [error, setError] = useState<Error | null>(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const isMounted = useRef(true);
+    const fetchInProgress = useRef(false);
+
+    // Memoize params to prevent unnecessary re-fetches
+    const paramsKey = useMemo(() => JSON.stringify(params), [params]);
 
     const fetchData = useCallback(async (isRefresh = false) => {
+        if (fetchInProgress.current && !isRefresh) return;
+        fetchInProgress.current = true;
+
         try {
             if (isRefresh) {
                 setIsRefreshing(true);
@@ -331,16 +370,19 @@ export function useFilteredMovies(params: {
             if (country) url += `&country=${country}`;
             if (year) url += `&year=${year}`;
 
-            const res = await fetch(url, {
-                headers: {
-                    Referer: "https://phimanh.netlify.app",
-                    "User-Agent": "phimanh-bot/1.0",
-                },
-            });
+            const cacheKey = `filtered-${url}`;
 
-            if (!res.ok) throw new Error("Failed to fetch filtered movies");
+            const data = await apiCache.fetchWithCache(cacheKey, async () => {
+                const res = await fetch(url, {
+                    headers: {
+                        Referer: "https://phimanh.netlify.app",
+                        "User-Agent": "phimanh-bot/1.0",
+                    },
+                });
 
-            const data = await res.json();
+                if (!res.ok) throw new Error("Failed to fetch filtered movies");
+                return res.json();
+            }, 60000); // Cache filtered results for 1 minute
 
             if (isMounted.current) {
                 setMovies(data.data?.items || []);
@@ -352,12 +394,13 @@ export function useFilteredMovies(params: {
                 setError(err instanceof Error ? err : new Error("Unknown error"));
             }
         } finally {
+            fetchInProgress.current = false;
             if (isMounted.current) {
                 setLoading(false);
                 setIsRefreshing(false);
             }
         }
-    }, [params]);
+    }, [paramsKey]);
 
     const refresh = useCallback(() => {
         fetchData(true);
@@ -372,16 +415,18 @@ export function useFilteredMovies(params: {
         };
     }, [fetchData]);
 
-    // Auto-refresh every 3 minutes
+    // Auto-refresh every 2 minutes
     useEffect(() => {
         const interval = setInterval(() => {
-            if (document.visibilityState === "visible") {
+            if (document.visibilityState === "visible" && !fetchInProgress.current) {
                 fetchData(true);
             }
-        }, 60000); // 1 minute for filtered
+        }, 120000);
 
         return () => clearInterval(interval);
     }, [fetchData]);
 
-    return { movies, pagination, loading, error, refresh, isRefreshing };
+    return useMemo(() => ({ 
+        movies, pagination, loading, error, refresh, isRefreshing 
+    }), [movies, pagination, loading, error, refresh, isRefreshing]);
 }
