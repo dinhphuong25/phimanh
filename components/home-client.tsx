@@ -35,7 +35,16 @@ export default function HomeClient({
     const displayMovies = filterHiddenMovies(newUpdates.length > 0 ? newUpdates : initialMovies);
     // Ưu tiên: 1. featuredMovie từ SSR, 2. heroMovie từ hook, 3. phim đầu tiên
     const displayHeroMovie = featuredMovie || heroMovie || initialMovies[0] || displayMovies[0];
-    const displayTopics = topicsData.length > 0 ? topicsData : initialTopicsWithMovies;
+    
+    // Merge topic data: ưu tiên giữ movies từ SSR nếu client-side trả về rỗng
+    const displayTopics = initialTopicsWithMovies.map((initialTopic: any) => {
+        const clientTopic = topicsData.find((t: any) => t.slug === initialTopic.slug);
+        // Nếu client-side có movies thì dùng, ngược lại giữ SSR data
+        const movies = (clientTopic?.movies && clientTopic.movies.length > 0) 
+            ? clientTopic.movies 
+            : initialTopic.movies || [];
+        return { ...initialTopic, movies };
+    });
 
     return (
         <>
