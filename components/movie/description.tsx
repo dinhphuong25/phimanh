@@ -103,9 +103,9 @@ export default function Description({ movie, serverData }: any) {
   }, [currentEpisodeUrl, currentEpisodeIndex, movie.slug]);
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6 pt-4">
+    <div className="w-full max-w-6xl mx-auto space-y-4 pt-4">
       {/* Video Player Section */}
-      <Card className="shadow-2xl rounded-3xl overflow-hidden bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border border-gray-200/50 dark:border-gray-800/50">
+      <Card className="shadow-2xl rounded-2xl md:rounded-3xl overflow-hidden bg-gradient-to-b from-gray-900/95 to-gray-950/98 backdrop-blur-xl border border-white/10">
         <CardContent className="p-0">
           {/* Movie Information Section */}
           {playerMode === 'm3u8' ? (
@@ -113,6 +113,16 @@ export default function Description({ movie, serverData }: any) {
               videoUrl={currentEpisodeUrl}
               autoplay={true}
               poster={movie.thumb_url || movie.poster_url}
+              onSwitchToEmbed={() => {
+                setPlayerMode('embed');
+                // Update current url to embed link
+                if (currentEpisodeIndex && serverData) {
+                  const currentEpisode = serverData[currentEpisodeIndex.server]?.server_data[currentEpisodeIndex.episode];
+                  if (currentEpisode?.link_embed) {
+                    setCurrentEpisodeUrl(currentEpisode.link_embed);
+                  }
+                }
+              }}
               onEnded={() => {
                 if (!serverData || !currentEpisodeIndex) return;
 
@@ -156,109 +166,114 @@ export default function Description({ movie, serverData }: any) {
 
 
 
-        <div className="p-6 items-center">
-          <details open className="cursor-pointer">
-            <summary className="list-none">
-              <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white mb-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors inline">
-                {movie.name}{" "}
-                <Badge
-                  variant="default"
-                  className="bg-blue-600 text-white shadow text-xs"
-                >
+        {/* Movie Info Section - Premium Design */}
+        <div className="p-4 md:p-6 bg-gradient-to-b from-transparent via-gray-900/50 to-gray-900/80">
+          {/* Title Section */}
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white tracking-tight">
+                  {movie.name}
+                </h1>
+                <Badge className="bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25 text-xs px-2.5 py-0.5 font-semibold">
                   {movie.quality}
                 </Badge>
-              </h1>
-            </summary>
-            <div className="mt-4 space-y-4">
-              <h2 className="text-lg md:text-xl font-bold text-blue-700 dark:text-blue-400">
+              </div>
+              <h2 className="text-sm md:text-base text-blue-400/90 mt-1.5 font-medium">
                 {movie.origin_name}
               </h2>
-              <div className="flex flex-wrap gap-2 text-xs md:text-sm">
-                <Badge
-                  variant="default"
-                  className="bg-green-600 text-white shadow"
-                >
-                  {movie.lang}
-                </Badge>
-                <Badge
-                  variant="default"
-                  className="bg-purple-600 text-white shadow"
-                >
-                  {movie.time}
-                </Badge>
-                <Badge
-                  variant="default"
-                  className="bg-yellow-500 text-white shadow"
-                >
-                  {movie.year}
-                </Badge>
+            </div>
+            
+            {/* Quick Info Badges */}
+            <div className="flex flex-wrap gap-2">
+              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                <svg className="w-3.5 h-3.5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="text-xs font-medium text-white/90">{movie.lang}</span>
               </div>
+              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                <svg className="w-3.5 h-3.5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
+                <span className="text-xs font-medium text-white/90">{movie.time}</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                <svg className="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                <span className="text-xs font-medium text-white/90">{movie.year}</span>
+              </div>
+            </div>
+          </div>
 
-              <details open className="mt-4 cursor-pointer">
-                <summary className="font-semibold text-gray-900 dark:text-white text-base mb-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  Chi tiết phim
-                </summary>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700 dark:text-gray-300">
-                    <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">
-                        Đạo diễn:
-                      </p>
-                      <p className="mt-1">{movie.director.join(", ")}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">
-                        Diễn viên:
-                      </p>
-                      <p className="mt-1">{movie.actor.join(", ")}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">
-                        Thể loại:
-                      </p>
-                      <p className="mt-1">
-                        {movie.category
-                          .map((cat: { name: string }) => cat.name)
-                          .join(", ")}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">
-                        Quốc gia:
-                      </p>
-                      <p className="mt-1">
-                        {movie.country
-                          .map((c: { name: string }) => c.name)
-                          .join(", ")}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Content Section */}
-                  <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-5 shadow-lg">
-                    <h3 className="text-lg font-bold mb-3 text-gray-900 dark:text-white">
-                      Nội dung phim
-                    </h3>
-                    <p className="text-gray-800 dark:text-gray-200 leading-relaxed">
-                      {movie.content}
-                    </p>
+          {/* Expandable Details */}
+          <details className="mt-4 group">
+            <summary className="flex items-center gap-2 cursor-pointer text-white/80 hover:text-white transition-colors list-none">
+              <span className="text-sm font-medium">Xem chi tiết phim</span>
+              <svg className="w-4 h-4 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            
+            <div className="mt-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              {/* Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                <div className="space-y-1">
+                  <p className="text-xs text-white/60 uppercase tracking-wider">Đạo diễn</p>
+                  <p className="text-sm text-white font-medium">{movie.director.join(", ") || "Chưa cập nhật"}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-white/60 uppercase tracking-wider">Diễn viên</p>
+                  <p className="text-sm text-white font-medium line-clamp-2">{movie.actor.join(", ") || "Chưa cập nhật"}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-white/60 uppercase tracking-wider">Thể loại</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {movie.category?.map((cat: { name: string; slug: string }, index: number) => (
+                      <span key={index} className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full">
+                        {cat.name}
+                      </span>
+                    ))}
                   </div>
                 </div>
-              </details>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap gap-4 py-2 justify-center md:justify-start">
-                {movie.trailer_url && (
-                  <Button
-                    size="lg"
-                    variant="secondary"
-                    className="font-bold px-8 py-2 text-lg rounded-xl shadow-lg transition-all hover:bg-gray-700"
-                    onClick={() => setShowTrailer(true)}
-                  >
-                    Xem Trailer
-                  </Button>
-                )}
+                <div className="space-y-1">
+                  <p className="text-xs text-white/60 uppercase tracking-wider">Quốc gia</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {movie.country?.map((c: { name: string; slug: string }, index: number) => (
+                      <span key={index} className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
+                        {c.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
+
+              {/* Content Section */}
+              <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                  </svg>
+                  Nội dung phim
+                </h3>
+                <p className="text-sm text-white/80 leading-relaxed">
+                  {movie.content || "Chưa có thông tin nội dung phim."}
+                </p>
+              </div>
+
+              {/* Trailer Button */}
+              {movie.trailer_url && (
+                <Button
+                  onClick={() => setShowTrailer(true)}
+                  className="w-full md:w-auto bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-semibold py-2.5 px-6 rounded-xl shadow-lg shadow-red-500/25 transition-all hover:shadow-red-500/40 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                  Xem Trailer
+                </Button>
+              )}
             </div>
           </details>
         </div>

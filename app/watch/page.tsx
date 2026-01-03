@@ -87,17 +87,22 @@ export default async function WatchPage({ searchParams }: any) {
       <BreadcrumbStructuredData items={structuredBreadcrumbItems} />
 
       <main className="min-h-screen relative">
+        {/* Background Image with Blur */}
         <div
           className="fixed inset-0 z-0"
           style={{
             backgroundImage: `url(${movie.poster_url})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
+            backgroundRepeat: 'no-repeat',
+            filter: 'blur(20px)',
+            transform: 'scale(1.1)',
           }}
         />
+        {/* Gradient Overlay */}
+        <div className="fixed inset-0 z-0 bg-gradient-to-b from-black/70 via-black/80 to-black/95" />
 
-        <div className="relative z-10 mx-auto max-w-screen-2xl px-4">
+        <div className="relative z-10 mx-auto max-w-screen-2xl px-3 md:px-4">
           <Description movie={movie} serverData={server} slug={slug} thumb_url={movie.thumb_url} />
           <Footer />
         </div>

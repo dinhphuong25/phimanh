@@ -131,32 +131,24 @@ export default function Header({
             onClick={() => showLoading()}
             className="group flex items-center"
           >
-            {/* Creative Logo with Dynamic Animations */}
-            <div className="relative flex items-center gap-1.5 sm:gap-2 animate-float-logo">
-              {/* Play button with animated gradient and glow */}
-              <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-red-500 via-rose-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/50 group-hover:shadow-xl group-hover:shadow-red-500/70 transition-all duration-300 group-hover:scale-110 animate-gradient-spin" style={{ backgroundSize: '200% 200%' }}>
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white ml-0.5 drop-shadow-md" viewBox="0 0 24 24" fill="currentColor">
+            {/* Minimalist Premium Logo */}
+            <div className="relative flex items-center gap-2">
+              {/* Circular Play Button */}
+              <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/40 group-hover:shadow-red-600/60 group-hover:scale-105 transition-all duration-300">
+                <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white ml-0.5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M8 5v14l11-7z" />
                 </svg>
-                {/* Pulsing rings */}
-                <div className="absolute inset-0 rounded-xl border-2 border-red-400/60 animate-ping-logo" />
-                <div className="absolute inset-[-3px] rounded-xl border border-white/20 animate-pulse-glow" />
               </div>
 
-              {/* Text with glow effects */}
-              <div className="flex flex-col leading-none">
-                <span className="text-base sm:text-xl font-black text-white tracking-tight animate-text-glow">
-                  RẠP PHIM
+              {/* Modern Poppins Font Text */}
+              <div className="flex flex-col leading-tight font-poppins">
+                <span className="text-sm sm:text-base font-bold text-white">
+                  Rạp Phim
                 </span>
-                <span className="text-[10px] sm:text-xs font-bold text-red-400 tracking-[0.2em] animate-text-pulse">
-                  CHILL
+                <span className="text-[9px] sm:text-[11px] font-semibold tracking-widest text-red-500 uppercase">
+                  Chill
                 </span>
               </div>
-
-              {/* Floating particles */}
-              <div className="absolute -top-1 right-0 w-1.5 h-1.5 bg-yellow-400 rounded-full animate-particle-1" />
-              <div className="absolute bottom-0 -left-1 w-1 h-1 bg-cyan-400 rounded-full animate-particle-2" />
-              <div className="absolute top-1/2 -right-2 w-1 h-1 bg-pink-400 rounded-full animate-particle-3" />
             </div>
           </Link>
           {/* Categories hidden - only show in sidebar menu */}

@@ -47,15 +47,22 @@ export default function HomeClient({
             <div className="container mx-auto px-2 sm:px-4 pb-8 sm:pb-16 pt-20 sm:pt-8 relative z-10">
                 <div className="space-y-4 sm:space-y-10">
                     {/* New Updates Section */}
-                    <section>
+                    <section className="new-updates-section">
                         <div className="flex items-center justify-between mb-3 sm:mb-5 px-1">
                             <div className="flex items-center gap-1.5 sm:gap-3">
-                                <div className="w-0.5 sm:w-1 h-5 sm:h-7 bg-primary rounded-full" />
+                                <div className="w-1 sm:w-1.5 h-5 sm:h-7 bg-red-600 rounded-full" />
                                 <h2 className="text-sm sm:text-xl font-bold text-white">Mới Cập Nhật</h2>
                             </div>
 
-                            {/* Live Status - hide text on mobile */}
-                            <div className="hidden sm:block">
+                            {/* Live Status with green indicator */}
+                            <div className="flex items-center gap-2">
+                                <div className="hidden sm:flex items-center gap-2 text-xs text-gray-400">
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                    </span>
+                                    <span>Cập nhật vừa xong</span>
+                                </div>
                                 <LiveStatus
                                     lastUpdated={lastUpdated}
                                     isRefreshing={isRefreshing}

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import GTM from "@/components/ui/GTM";
 import PageTransition from "@/components/ui/page-transition";
@@ -14,6 +14,13 @@ import { PWAInstaller, PerformanceMonitor } from "@/components/pwa-init";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const poppins = Poppins({
+  weight: ["400", "500", "600", "700", "800", "900"],
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-poppins",
   display: "swap",
 });
 
@@ -239,7 +246,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${inter.variable} font-sans antialiased`}
+        className={`${inter.variable} ${poppins.variable} font-sans antialiased`}
         suppressHydrationWarning
       >
         <GTM />

@@ -76,94 +76,121 @@ export default function Episode({
   const currentServer = serverData[currentServerIndex];
 
   return (
-    <div>
-      {/* Player Mode Switch */}
-      <div className="w-full mb-4 flex items-center justify-between bg-gray-800 p-2 rounded-lg">
-        <span className="text-white text-sm font-medium">Chế độ phát:</span>
-        <div className="flex gap-2">
-          <Button
-            variant={playerMode === 'm3u8' ? "default" : "outline"}
-            size="sm"
+    <div className="space-y-4">
+      {/* Player Mode Switch - Premium Design */}
+      <div className="flex items-center justify-between p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+        <div className="flex items-center gap-2">
+          <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-white/80 text-sm font-medium">Chế độ phát</span>
+        </div>
+        <div className="flex gap-1 p-1 bg-white/5 rounded-lg">
+          <button
             onClick={() => onPlayerModeChange('m3u8')}
             className={cn(
-              "text-xs",
-              playerMode === 'm3u8' ? "bg-blue-600 hover:bg-blue-700" : "bg-transparent text-gray-300 border-gray-600 hover:bg-gray-700"
+              "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+              playerMode === 'm3u8' 
+                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25" 
+                : "text-white/60 hover:text-white hover:bg-white/10"
             )}
           >
             Mặc định
-          </Button>
-          <Button
-            variant={playerMode === 'embed' ? "default" : "outline"}
-            size="sm"
+          </button>
+          <button
             onClick={() => onPlayerModeChange('embed')}
             className={cn(
-              "text-xs",
-              playerMode === 'embed' ? "bg-blue-600 hover:bg-blue-700" : "bg-transparent text-gray-300 border-gray-600 hover:bg-gray-700"
+              "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+              playerMode === 'embed' 
+                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25" 
+                : "text-white/60 hover:text-white hover:bg-white/10"
             )}
           >
             Dự phòng
-          </Button>
+          </button>
         </div>
       </div>
 
-      {/* Server Selector - Show only if multiple servers */}
+      {/* Server Selector - Tab Style */}
       {serverData.length > 1 && (
-        <div className="w-full mb-4">
-          <h4 className="text-white text-sm font-medium mb-2 px-2">Server</h4>
-          <Select value={currentServerIndex.toString()} onValueChange={(value) => handleServerChange(parseInt(value))}>
-            <SelectTrigger className="w-full bg-gray-800 border-gray-600 text-white">
-              <SelectValue placeholder="Chọn server" />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-600 text-white">
-              {serverData.map((server, index) => (
-                <SelectItem key={index} value={index.toString()} className="text-white">
-                  {server.server_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="space-y-2">
+          <h4 className="text-white/80 text-sm font-medium flex items-center gap-2">
+            <svg className="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+            </svg>
+            Server
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {serverData.map((server, index) => (
+              <button
+                key={index}
+                onClick={() => handleServerChange(index)}
+                className={cn(
+                  "px-4 py-2 text-xs font-medium rounded-lg transition-all border",
+                  currentServerIndex === index
+                    ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/25"
+                    : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                {server.server_name}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Episode List - Horizontal layout with thumbnail on left */}
-      <div className="w-full">
-        <h4 className="text-white text-sm font-medium mb-2 px-2">
-          Danh sách tập phim ({currentServer?.server_data?.length || 0} tập)
+      {/* Episode List - Premium Cards */}
+      <div className="space-y-2">
+        <h4 className="text-white/80 text-sm font-medium flex items-center gap-2">
+          <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+          </svg>
+          Danh sách tập ({currentServer?.server_data?.length || 0} tập)
         </h4>
-        <div className="max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 bg-gray-900/50 rounded-lg p-2">
-          {currentServer?.server_data?.length > 0 ? currentServer.server_data.map((episode, index) => {
-            const isActive = index === currentEpisodeIndex;
-            return (
-              <div
-                key={`${currentServerIndex}-${index}`}
-                onClick={() => handleEpisodeChange(
-                  playerMode === 'm3u8' ? episode.link_m3u8 : episode.link_embed,
-                  currentServerIndex,
-                  index
-                )}
-                className={cn(
-                  "flex items-center p-2 rounded-lg cursor-pointer transition-all border mb-1",
-                  isActive
-                    ? "bg-green-700 text-white border-green-600 ring-1 ring-green-500"
-                    : "bg-gray-800 text-gray-200 border-gray-600 hover:border-gray-500 hover:bg-gray-700"
-                )}
-                aria-label={`Tập ${episode.name}`}
-              >
-                <img
-                  src={thumb_url}
-                  alt={episode.name}
-                  loading="lazy"
-                  className="w-10 h-10 object-cover rounded mr-3 flex-shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm truncate">{episode.name}</div>
-                  <div className="text-xs text-gray-400 truncate">{episode.filename}</div>
-                </div>
+        <div className="max-h-[280px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent p-1 -m-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {currentServer?.server_data?.length > 0 ? currentServer.server_data.map((episode, index) => {
+              const isActive = index === currentEpisodeIndex;
+              return (
+                <button
+                  key={`${currentServerIndex}-${index}`}
+                  onClick={() => handleEpisodeChange(
+                    playerMode === 'm3u8' ? episode.link_m3u8 : episode.link_embed,
+                    currentServerIndex,
+                    index
+                  )}
+                  className={cn(
+                    "relative flex flex-col items-center p-3 rounded-xl transition-all border group",
+                    isActive
+                      ? "bg-gradient-to-br from-green-600/90 to-green-700/90 text-white border-green-500 shadow-lg shadow-green-500/25 ring-2 ring-green-400/50"
+                      : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:border-white/20"
+                  )}
+                >
+                  {isActive && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                  <span className={cn(
+                    "font-bold text-sm",
+                    isActive ? "text-white" : "text-white/90 group-hover:text-white"
+                  )}>
+                    {episode.name}
+                  </span>
+                </button>
+              );
+            }) : (
+              <div className="col-span-full text-center py-8 text-white/60">
+                <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                </svg>
+                <p>Không có tập phim nào</p>
               </div>
-            );
-          }) : (
-            <div className="text-white text-center py-4">Không có tập phim nào trong server này</div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

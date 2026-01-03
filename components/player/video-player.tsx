@@ -38,6 +38,7 @@ interface VideoPlayerProps {
   poster?: string;
   onError?: (error: any) => void;
   onEnded?: () => void;
+  onSwitchToEmbed?: () => void;
 }
 
 const formatTime = (seconds: number) => {
@@ -57,6 +58,7 @@ const VideoPlayer = ({
   poster,
   onError,
   onEnded,
+  onSwitchToEmbed,
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -77,6 +79,8 @@ const VideoPlayer = ({
   const [playbackRate, setPlaybackRate] = useState(1);
   const [quality, setQuality] = useState<number>(-1); // -1 is auto
   const [qualities, setQualities] = useState<{ height: number, level: number }[]>([]);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
   // Double tap state
   const [skipAnimation, setSkipAnimation] = useState<{ side: 'left' | 'right', id: number } | null>(null);
@@ -181,15 +185,29 @@ const VideoPlayer = ({
             clearTimeout(loadTimeout);
             switch (data.type) {
               case HLS.ErrorTypes.NETWORK_ERROR:
-                console.error('Network error, retrying...');
-                hls.startLoad();
+                if (retryCount < maxRetries) {
+                  console.error(`Network error, retrying... (${retryCount + 1}/${maxRetries})`);
+                  setRetryCount(prev => prev + 1);
+                  setTimeout(() => hls.startLoad(), 1000);
+                } else {
+                  setError("Lỗi mạng. Đang chuyển sang chế độ Dự phòng...");
+                  setIsLoading(false);
+                  setTimeout(() => onSwitchToEmbed?.(), 1500);
+                }
                 break;
               case HLS.ErrorTypes.MEDIA_ERROR:
-                console.error('Media error, recovering...');
-                hls.recoverMediaError();
+                if (retryCount < maxRetries) {
+                  console.error(`Media error, recovering... (${retryCount + 1}/${maxRetries})`);
+                  setRetryCount(prev => prev + 1);
+                  hls.recoverMediaError();
+                } else {
+                  setError("Lỗi media. Đang chuyển sang chế độ Dự phòng...");
+                  setIsLoading(false);
+                  setTimeout(() => onSwitchToEmbed?.(), 1500);
+                }
                 break;
               default:
-                setError("Không thể tải video. Vui lòng thử chế độ Embed.");
+                setError("Không thể tải video. Vui lòng thử chế độ Dự phòng.");
                 setIsLoading(false);
                 onError?.(data);
                 break;
@@ -294,41 +312,7 @@ const VideoPlayer = ({
         (document as any).mozFullScreenElement ||
         (document as any).msFullscreenElement
       );
-
-      // Always sync state with actual browser fullscreen state
       setIsFullscreen(isCurrentlyFullscreen);
-
-      if (!isCurrentlyFullscreen) {
-        // Unlock orientation when exiting fullscreen via browser controls
-        if (screen.orientation && (screen.orientation as any).unlock) {
-          try {
-            (screen.orientation as any).unlock();
-          } catch (err) {
-            console.log('Screen orientation unlock failed:', err);
-          }
-        }
-
-        // Force re-layout on exit fullscreen for mobile browsers
-        if (containerRef.current) {
-          // Reset any inline styles that might have been set
-          containerRef.current.style.width = '';
-          containerRef.current.style.height = '';
-          containerRef.current.style.position = '';
-          containerRef.current.style.top = '';
-          containerRef.current.style.left = '';
-          containerRef.current.style.zIndex = '';
-
-          // Force browser to recalculate layout
-          void containerRef.current.offsetHeight;
-        }
-
-        // Also ensure video element is properly sized
-        if (videoRef.current) {
-          videoRef.current.style.width = '';
-          videoRef.current.style.height = '';
-          void videoRef.current.offsetHeight;
-        }
-      }
     };
 
     // Listen to all vendor-specific fullscreen change events
@@ -337,31 +321,11 @@ const VideoPlayer = ({
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
-    // Also listen for iOS Safari's webkitbeginfullscreen and webkitendfullscreen on video element
+    // iOS Safari events on video element
     const video = videoRef.current;
     if (video) {
-      const handleIOSFullscreenStart = () => setIsFullscreen(true);
-      const handleIOSFullscreenEnd = () => {
-        setIsFullscreen(false);
-        // Force re-layout for iOS
-        if (containerRef.current) {
-          containerRef.current.style.width = '';
-          containerRef.current.style.height = '';
-          void containerRef.current.offsetHeight;
-        }
-      };
-
-      video.addEventListener('webkitbeginfullscreen', handleIOSFullscreenStart);
-      video.addEventListener('webkitendfullscreen', handleIOSFullscreenEnd);
-
-      return () => {
-        document.removeEventListener('fullscreenchange', handleFullscreenChange);
-        document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-        document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-        document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
-        video.removeEventListener('webkitbeginfullscreen', handleIOSFullscreenStart);
-        video.removeEventListener('webkitendfullscreen', handleIOSFullscreenEnd);
-      };
+      video.addEventListener('webkitbeginfullscreen', () => setIsFullscreen(true));
+      video.addEventListener('webkitendfullscreen', () => setIsFullscreen(false));
     }
 
     return () => {
@@ -369,6 +333,10 @@ const VideoPlayer = ({
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
       document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+      if (video) {
+        video.removeEventListener('webkitbeginfullscreen', () => setIsFullscreen(true));
+        video.removeEventListener('webkitendfullscreen', () => setIsFullscreen(false));
+      }
     };
   }, []);
 
@@ -440,46 +408,30 @@ const VideoPlayer = ({
       );
 
       if (!isCurrentlyFullscreen) {
-        // Enter fullscreen
-        let fullscreenSuccess = false;
+        // Enter fullscreen - try container first, then video element for iOS
+        const container = containerRef.current;
+        const video = videoRef.current;
 
-        // Try standard API
-        if (containerRef.current.requestFullscreen) {
-          await containerRef.current.requestFullscreen();
-          fullscreenSuccess = true;
-        }
-        // Try webkit prefix (Safari/older Chrome)
-        else if ((containerRef.current as any).webkitRequestFullscreen) {
-          await (containerRef.current as any).webkitRequestFullscreen();
-          fullscreenSuccess = true;
-        }
-        // iOS Safari fallback - use video element's native fullscreen
-        else if ((videoRef.current as any).webkitEnterFullscreen) {
-          (videoRef.current as any).webkitEnterFullscreen();
-          fullscreenSuccess = true;
-        }
-        // Firefox
-        else if ((containerRef.current as any).mozRequestFullScreen) {
-          await (containerRef.current as any).mozRequestFullScreen();
-          fullscreenSuccess = true;
-        }
-        // IE/Edge
-        else if ((containerRef.current as any).msRequestFullscreen) {
-          await (containerRef.current as any).msRequestFullscreen();
-          fullscreenSuccess = true;
+        if (container.requestFullscreen) {
+          await container.requestFullscreen();
+        } else if ((container as any).webkitRequestFullscreen) {
+          await (container as any).webkitRequestFullscreen();
+        } else if ((container as any).mozRequestFullScreen) {
+          await (container as any).mozRequestFullScreen();
+        } else if ((container as any).msRequestFullscreen) {
+          await (container as any).msRequestFullscreen();
+        } else if ((video as any).webkitEnterFullscreen) {
+          // iOS Safari fallback - use video element's native fullscreen
+          (video as any).webkitEnterFullscreen();
         }
 
-        if (fullscreenSuccess) {
-          setIsFullscreen(true);
-
-          // Lock orientation to landscape on mobile
+        // Try to lock orientation to landscape on mobile
+        try {
           if (screen.orientation && (screen.orientation as any).lock) {
-            try {
-              await (screen.orientation as any).lock('landscape');
-            } catch (err) {
-              console.log('Screen orientation lock failed:', err);
-            }
+            await (screen.orientation as any).lock('landscape');
           }
+        } catch (err) {
+          // Orientation lock may not be supported, ignore
         }
       } else {
         // Exit fullscreen
@@ -493,15 +445,13 @@ const VideoPlayer = ({
           await (document as any).msExitFullscreen();
         }
 
-        setIsFullscreen(false);
-
         // Unlock orientation
-        if (screen.orientation && (screen.orientation as any).unlock) {
-          try {
+        try {
+          if (screen.orientation && (screen.orientation as any).unlock) {
             (screen.orientation as any).unlock();
-          } catch (err) {
-            console.log('Screen orientation unlock failed:', err);
           }
+        } catch (err) {
+          // Ignore
         }
       }
     } catch (err) {
@@ -604,21 +554,11 @@ const VideoPlayer = ({
   return (
     <div
       ref={containerRef}
-      key={isFullscreen ? 'fullscreen' : 'normal'}
       data-fullscreen={isFullscreen}
       className={cn(
         "relative bg-black group overflow-hidden select-none",
-        isFullscreen ? "w-screen h-screen fixed inset-0 z-50" : "w-full aspect-video"
+        "w-full aspect-video"
       )}
-      style={!isFullscreen ? {
-        position: 'relative',
-        width: '100%',
-        height: 'auto',
-        top: 'auto',
-        left: 'auto',
-        right: 'auto',
-        bottom: 'auto',
-      } : undefined}
       onMouseMove={(e) => {
         if (e.movementX !== 0 || e.movementY !== 0) {
           showControlsHandler();
@@ -686,17 +626,51 @@ const VideoPlayer = ({
 
       {/* Loading Overlay */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20 pointer-events-none">
-          <Loader2 className="w-12 h-12 text-white animate-spin" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-black/80 via-black/40 to-black/80 z-20 pointer-events-none">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-white/20 rounded-full"></div>
+            <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-white rounded-full animate-spin"></div>
+          </div>
+          <p className="text-white/80 text-sm mt-4 font-medium">Đang tải video...</p>
+          {retryCount > 0 && (
+            <p className="text-yellow-400 text-xs mt-2">Đang thử lại ({retryCount}/{maxRetries})</p>
+          )}
         </div>
       )}
 
       {/* Error Overlay */}
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-30">
-          <div className="text-center p-4">
-            <p className="text-red-500 font-bold mb-2">Lỗi</p>
-            <p className="text-white text-sm">{error}</p>
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/90 via-black/70 to-black/90 z-30 backdrop-blur-sm">
+          <div className="text-center p-6 max-w-md">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <p className="text-red-400 font-bold text-lg mb-2">Không thể phát video</p>
+            <p className="text-white/80 text-sm mb-4">{error}</p>
+            <div className="flex gap-3 justify-center">
+              <Button
+                onClick={() => {
+                  setError(null);
+                  setRetryCount(0);
+                  setIsLoading(true);
+                }}
+                className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm"
+                size="sm"
+              >
+                Thử lại
+              </Button>
+              {onSwitchToEmbed && (
+                <Button
+                  onClick={() => onSwitchToEmbed()}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  size="sm"
+                >
+                  Chế độ Dự phòng
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       )}
