@@ -264,15 +264,17 @@ export default function Description({ movie, serverData }: any) {
 
               {/* Trailer Button */}
               {movie.trailer_url && (
-                <Button
-                  onClick={() => setShowTrailer(true)}
-                  className="w-full md:w-auto bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-semibold py-2.5 px-6 rounded-xl shadow-lg shadow-red-500/25 transition-all hover:shadow-red-500/40 flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                  </svg>
-                  Xem Trailer
-                </Button>
+                <div className="flex justify-center pt-2">
+                  <Button
+                    onClick={() => setShowTrailer(true)}
+                    className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-semibold py-2 px-5 sm:py-2.5 sm:px-6 rounded-xl shadow-lg shadow-red-500/25 transition-all hover:shadow-red-500/40 flex items-center justify-center gap-2 text-sm sm:text-base"
+                  >
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                    </svg>
+                    Xem Trailer
+                  </Button>
+                </div>
               )}
             </div>
           </details>

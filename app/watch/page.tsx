@@ -1,6 +1,5 @@
 import PhimApi from "@/libs/phimapi.com";
 import Description from "@/components/movie/description";
-import Footer from "@/components/footer";
 import { MovieStructuredData, BreadcrumbStructuredData } from "@/components/seo/structured-data";
 import Breadcrumb, { useBreadcrumb } from "@/components/seo/breadcrumb";
 import { notFound } from "next/navigation";
@@ -104,7 +103,6 @@ export default async function WatchPage({ searchParams }: any) {
 
         <div className="relative z-10 mx-auto max-w-screen-2xl px-3 md:px-4">
           <Description movie={movie} serverData={server} slug={slug} thumb_url={movie.thumb_url} />
-          <Footer />
         </div>
       </main>
     </div>

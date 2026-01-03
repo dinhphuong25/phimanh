@@ -121,40 +121,49 @@ const VideoPlayer = ({
     const initHls = () => {
       if (HLS.isSupported()) {
         const hls = new HLS({
-          // Performance
-          enableWorker: true,
-          lowLatencyMode: true,
-
-          // Fast startup - reduce initial buffer for quicker playback start
-          maxBufferLength: 20,           // Reduced from 30 for faster startup
-          maxMaxBufferLength: 600,
-
-          // Smart buffering - optimized for mobile
-          backBufferLength: 30,          // Reduced from 90 for better mobile performance
-          frontBufferFlushThreshold: 600,
-
-          // Quality & ABR (Adaptive Bitrate) - OPTIMIZED FOR BEST QUALITY & HDR
-          startLevel: -1,                // Auto-select starting quality based on bandwidth
-          abrEwmaDefaultEstimate: 10000000, // 10 Mbps initial estimate for HD/4K content
-          abrBandWidthFactor: 0.7,       // More conservative quality downgrades
-          abrBandWidthUpFactor: 0.6,     // Very aggressive quality upgrades for best viewing
-          abrEwmaFastLive: 2,            // Faster adaptation to bandwidth changes
-          abrEwmaSlowLive: 8,
-
-          // HDR & High Quality Support
-          capLevelToPlayerSize: false,   // Allow 4K/8K even on smaller screens for quality
-
-          // Fragment optimization for smooth seeking and loading
-          startFragPrefetch: true,       // Prefetch next fragment
-          maxFragLookUpTolerance: 0.25,  // Better seeking accuracy
-
-          // Loading optimizations - retry on failures
-          manifestLoadingMaxRetry: 6,
-          levelLoadingMaxRetry: 6,
-          fragLoadingMaxRetry: 6,
-
-          // Progressive web streaming
-          progressive: true,
+          // === FAST STARTUP - Load video quickly ===
+          enableWorker: true,              // Use web worker for better performance
+          lowLatencyMode: true,            // Enable low latency streaming
+          
+          // Minimal initial buffer for instant playback
+          maxBufferLength: 10,             // Reduced from 20 for faster startup
+          maxBufferSize: 60 * 1000 * 1000, // 60MB max buffer
+          maxBufferHole: 0.5,              // Tolerate small gaps for faster seeking
+          
+          // === AGGRESSIVE QUALITY SELECTION ===
+          startLevel: -1,                  // Auto-detect best quality immediately
+          abrEwmaDefaultEstimate: 20000000, // Assume 20 Mbps - favor high quality
+          abrBandWidthFactor: 0.9,         // Very conservative downgrades (keep quality)
+          abrBandWidthUpFactor: 0.5,       // Aggressive upgrades to best quality
+          abrEwmaFastLive: 2,              // Fast adaptation
+          abrEwmaSlowLive: 6,              // Quick response to bandwidth changes
+          
+          // === MAX QUALITY SETTINGS ===
+          capLevelToPlayerSize: false,     // Allow 4K even on smaller screens
+          maxLoadingDelay: 4,              // Reduce wait time for best quality
+          minAutoBitrate: 500000,          // Minimum 500 Kbps quality
+          
+          // === SMOOTH SEEKING & LOADING ===
+          startFragPrefetch: true,         // Preload next fragment immediately
+          maxFragLookUpTolerance: 0.1,     // Better seeking precision
+          progressive: true,               // Progressive download for faster start
+          
+          // === BUFFER OPTIMIZATION ===
+          backBufferLength: 20,            // Keep 20s back buffer for rewind
+          frontBufferFlushThreshold: 600,  // 10 minutes forward buffer max
+          
+          // === RELIABILITY - More retries for stable playback ===
+          manifestLoadingMaxRetry: 8,
+          manifestLoadingRetryDelay: 500,
+          levelLoadingMaxRetry: 8,
+          levelLoadingRetryDelay: 500,
+          fragLoadingMaxRetry: 8,
+          fragLoadingRetryDelay: 500,
+          
+          // === FAST RECOVERY ===
+          manifestLoadingTimeOut: 10000,   // 10s timeout for manifest
+          levelLoadingTimeOut: 10000,      // 10s timeout for level
+          fragLoadingTimeOut: 20000,       // 20s timeout for fragments
         });
         hls.loadSource(videoUrl);
         hls.attachMedia(video);
@@ -566,13 +575,14 @@ const VideoPlayer = ({
       }}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
-      {/* Video Element */}
+      {/* Video Element - Optimized for fast loading */}
       <video
         ref={videoRef}
         className="w-full h-full object-contain"
         poster={poster}
         playsInline
-        preload="metadata"
+        preload="auto"
+        crossOrigin="anonymous"
         style={{
           colorGamut: 'p3',
           colorSpace: 'display-p3',
