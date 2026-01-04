@@ -97,6 +97,16 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://rapphimchill.app",
   },
+
+  // Favicon configuration for search engines
+  icons: {
+    icon: [
+      { url: "/favicon.png", type: "image/png", sizes: "512x512" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
