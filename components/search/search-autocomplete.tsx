@@ -207,6 +207,8 @@ export default function SearchAutoComplete({
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           placeholder="Tìm kiếm phim, thể loại..."
+          autoComplete="off"
+          spellCheck={false}
           className={cn(
             "w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-white/40 transition-all duration-300",
             "focus:outline-none focus:bg-white/10 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50",
@@ -241,9 +243,9 @@ export default function SearchAutoComplete({
 
       {/* Suggestions Dropdown */}
       {isOpen && (
-        <div className="mt-0 bg-gray-900/95 backdrop-blur-md border border-white/10 border-t-0 rounded-b-xl shadow-2xl overflow-hidden block w-full">
+        <div className="flex-1 w-full mt-0 bg-gray-900/95 backdrop-blur-md border border-white/10 border-t-0 rounded-b-xl shadow-2xl overflow-hidden relative z-50">
           {suggestions.length > 0 ? (
-            <div className="max-h-96 overflow-y-auto">
+            <div className="max-h-[60vh] overflow-y-auto custom-scrollbar">
               {/* Movie Suggestions */}
               {suggestions
                 .filter((s) => s.type === "movie")
