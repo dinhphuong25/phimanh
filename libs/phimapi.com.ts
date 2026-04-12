@@ -8,10 +8,10 @@ export default class PhimApi {
     const url = `${this.apiUrl}/phim/${slug}`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://phimanh.netlify.app",
-        "User-Agent": "phimanh-bot/1.0",
+        Referer: "https://rapphimchill.pro",
+        "User-Agent": "phimanh-bot/2.0",
       },
-      next: { revalidate: 300 }, // Cache movie details for 5 minutes
+      next: { revalidate: 3600 }, // Cache movie details for 1 hour để giảm tải server
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();
@@ -42,8 +42,8 @@ export default class PhimApi {
     const url = `${this.apiUrl}/the-loai`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://phimanh.netlify.app",
-        "User-Agent": "phimanh-bot/1.0",
+        Referer: "https://rapphimchill.pro",
+        "User-Agent": "phimanh-bot/2.0",
       },
     });
     if (!response.ok) throw new Error("API error: " + response.status);
@@ -55,8 +55,8 @@ export default class PhimApi {
     const url = `${this.apiUrl}/quoc-gia`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://phimanh.netlify.app",
-        "User-Agent": "phimanh-bot/1.0",
+        Referer: "https://rapphimchill.pro",
+        "User-Agent": "phimanh-bot/2.0",
       },
     });
     if (!response.ok) throw new Error("API error: " + response.status);
@@ -82,10 +82,10 @@ export default class PhimApi {
     const url = `${this.apiUrl}/danh-sach/phim-moi-cap-nhat-v2?page=${index}&limit=20`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://phimanh.netlify.app",
-        "User-Agent": "phimanh-bot/1.0",
+        Referer: "https://rapphimchill.pro",
+        "User-Agent": "phimanh-bot/2.0",
       },
-      next: { revalidate: 60 }, // Cache for 60 seconds
+      next: { revalidate: 120 }, // Phim mới cập nhật liên tục: cache 2 phút
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();
@@ -96,8 +96,8 @@ export default class PhimApi {
     const url = `${this.apiUrl}/v1/api/tim-kiem?keyword=${query}&limit=20&page=${index}`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://phimanh.netlify.app",
-        "User-Agent": "phimanh-bot/1.0",
+        Referer: "https://rapphimchill.pro",
+        "User-Agent": "phimanh-bot/2.0",
       },
     });
     if (!response.ok) throw new Error("API error: " + response.status);
@@ -109,8 +109,8 @@ export default class PhimApi {
     const url = `${this.apiUrl}/v1/api/the-loai/${slug}?page=${index}&limit=20`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://phimanh.netlify.app",
-        "User-Agent": "phimanh-bot/1.0",
+        Referer: "https://rapphimchill.pro",
+        "User-Agent": "phimanh-bot/2.0",
       },
     });
     if (!response.ok) throw new Error("API error: " + response.status);
@@ -122,8 +122,8 @@ export default class PhimApi {
     const url = `${this.apiUrl}/v1/api/danh-sach/${slug}?page=${index}&limit=20`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://phimanh.netlify.app",
-        "User-Agent": "phimanh-bot/1.0",
+        Referer: "https://rapphimchill.pro",
+        "User-Agent": "phimanh-bot/2.0",
       },
     });
     if (!response.ok) throw new Error("API error: " + response.status);
@@ -135,10 +135,10 @@ export default class PhimApi {
     const url = `${this.apiUrl}/v1/api/danh-sach/${slug}?page=1&limit=${limit}`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://phimanh.netlify.app",
-        "User-Agent": "phimanh-bot/1.0",
+        Referer: "https://rapphimchill.pro",
+        "User-Agent": "phimanh-bot/2.0",
       },
-      next: { revalidate: 120 }, // Cache topic items for 2 minutes
+      next: { revalidate: 300 }, // Cache topic items (trang chủ) 5 phút
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();
@@ -177,8 +177,8 @@ export default class PhimApi {
 
     const response = await fetch(url, {
       headers: {
-        Referer: "https://phimanh.netlify.app",
-        "User-Agent": "phimanh-bot/1.0",
+        Referer: "https://rapphimchill.pro",
+        "User-Agent": "phimanh-bot/2.0",
       },
     });
     if (!response.ok) throw new Error("API error: " + response.status);
