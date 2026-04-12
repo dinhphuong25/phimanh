@@ -9,6 +9,8 @@ import MaterialThemeProvider from "@/components/providers/material-theme-provide
 import HydrationFix from "@/components/ui/hydration-fix";
 import DevBanner from "@/components/ui/dev-banner";
 import { PWAInstaller, PerformanceMonitor } from "@/components/pwa-init";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -294,6 +296,8 @@ export default function RootLayout({
         {/* PWA & Performance Monitoring */}
         <PWAInstaller />
         <PerformanceMonitor />
+        <Analytics />
+        <SpeedInsights />
 
         {/* Development Notice Banner */}
         <DevBanner />

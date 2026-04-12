@@ -3,7 +3,15 @@
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Episode from "./episode";
-import VideoPlayer from "../player/video-player";
+const VideoPlayer = dynamic(() => import("../player/video-player"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full aspect-video bg-black/80 flex flex-col items-center justify-center text-white/70">
+      <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mb-4" />
+      <span className="text-sm font-medium animate-pulse">Đang tải trình phát Video...</span>
+    </div>
+  ),
+});
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
