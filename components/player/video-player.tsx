@@ -447,6 +447,9 @@ const VideoPlayer = ({
   const toggleFullscreen = async () => {
     if (!containerRef.current || !videoRef.current) return;
 
+    const container = containerRef.current;
+    const video = videoRef.current;
+
     try {
       const isCurrentlyFullscreen = !!(
         document.fullscreenElement ||
@@ -457,8 +460,6 @@ const VideoPlayer = ({
 
       if (!isCurrentlyFullscreen) {
         // Enter fullscreen - try container first, then video element for iOS
-        const container = containerRef.current;
-        const video = videoRef.current;
 
         if (container.requestFullscreen) {
           await container.requestFullscreen().catch((err) => console.warn('Native fullscreen rejected:', err));
