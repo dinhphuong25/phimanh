@@ -45,7 +45,7 @@ export default async function PhimDetailPage({ params }: { params: Promise<{ slu
   try {
     const data = await getMovie(slug);
     movie = data.movie;
-    episodes = data.episodes || [];
+    episodes = data.server || (data as any).episodes || [];
   } catch {
     notFound();
   }
