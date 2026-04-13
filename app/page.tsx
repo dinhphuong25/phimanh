@@ -1,12 +1,17 @@
-import PhimApi from "@/libs/phimapi.com";
+// ISR: trang chủ được cache tĩnh 60s, TTFB cực nhanh sau lần đầu
+export const revalidate = 60;
+
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import MovieListClient from "@/components/movie/movie-list-client";
 import HomeClient from "@/components/home-client";
 import { ScrollToTopFAB } from "@/components/ui/material-fab";
-
-// Phim luôn được ghim làm phim nổi bật trên trang chủ
-const FEATURED_MOVIE_SLUG = "avatar-lua-va-tro-tan";
+import {
+  getCachedCategories,
+  getCachedCountries,
+  getCachedFeaturedMovie,
+  getCachedNewUpdates,
+} from "@/lib/data";
 
 type HomeProps = {
   searchParams: Promise<{
@@ -23,6 +28,12 @@ type HomeProps = {
   }>;
 };
 
+const TOPICS = [
+  { name: "Chương Trình Truyền Hình", slug: "phim-bo" },
+  { name: "Phim Điện Ảnh", slug: "phim-le" },
+  { name: "Phim Hoạt Hình", slug: "hoat-hinh" },
+];
+
 export async function generateMetadata({ searchParams }: HomeProps) {
   const params = await searchParams;
   const index = Number(params.index) || 1;
@@ -30,23 +41,23 @@ export async function generateMetadata({ searchParams }: HomeProps) {
   const topic = params.topic;
   const typeList = params.typeList;
 
-  const api = new PhimApi();
-  const topics = api.listTopics();
-  const categories = await api.listCategories();
-  let postTitle;
+  // Dùng cached function — không re-fetch nếu page component đã fetch
+  const categories = await getCachedCategories();
+  let postTitle: { name: string } | undefined;
 
   if (typeList) {
     postTitle = { name: "Kết quả Lọc" };
   } else if (category) {
-    postTitle = categories.find((c: any) => c.slug === category);
+    postTitle = (categories as any[]).find((c: any) => c.slug === category);
   } else if (topic) {
-    postTitle = topics.find((t: any) => t.slug === topic);
+    postTitle = TOPICS.find((t) => t.slug === topic);
   }
 
   const titleText =
     (postTitle ? `${postTitle.name} | ` : "") +
     "Rạp Phim Chill" +
     (index > 1 ? " - Trang " + index : "");
+
   return {
     title: titleText,
     description:
@@ -62,60 +73,35 @@ export default async function Home({ searchParams }: HomeProps) {
   const category = params.category;
   const topic = params.topic;
   const typeList = params.typeList;
-
-  const api = new PhimApi();
-  const topics = api.listTopics();
-  const categories = await api.listCategories();
-  const countries = await api.listCountries();
-
-  // Check if filters or topic/category are being used
   const hasFilters = Boolean(typeList || category || topic || params.country || params.year);
 
-  // Initial data for SSR
+  // Fetch navigation data in parallel — all cached, near-instant after first request
+  const [categories, countries] = await Promise.all([
+    getCachedCategories(),
+    getCachedCountries(),
+  ]);
+
+  // Only fetch home page data when no filters active
   let initialMovies: any[] = [];
-  let topicsWithMovies: any[] = [];
   let featuredMovie: any = null;
 
   if (!hasFilters) {
-    // Fetch phim featured và phim mới song song
-    try {
-      const [newUpdates, featuredData] = await Promise.all([
-        api.newAdding(1),
-        api.get(FEATURED_MOVIE_SLUG).catch((e) => { console.error("Failed to fetch featured movie:", e); return { movie: null }; })
-      ]);
-      initialMovies = newUpdates[0] || [];
-      featuredMovie = featuredData.movie;
-      console.log("Featured movie loaded:", featuredMovie?.name, featuredMovie?.slug);
-    } catch (error) {
-      console.error("Failed to fetch initial movies:", error);
-    }
-
-    try {
-      topicsWithMovies = await Promise.all(
-        topics.map(async (topicItem: any) => {
-          try {
-            const movies = await api.getTopicItems(topicItem.slug, 6);
-            return { ...topicItem, movies: movies || [] };
-          } catch {
-            return { ...topicItem, movies: [] };
-          }
-        })
-      );
-    } catch (error) {
-      console.error("Failed to fetch topics:", error);
-      topicsWithMovies = topics.map((topicItem: any) => ({
-        ...topicItem,
-        movies: [],
-      }));
-    }
+    // Parallel fetch — both cached separately, TTL-based
+    [initialMovies, featuredMovie] = await Promise.all([
+      getCachedNewUpdates(),
+      getCachedFeaturedMovie(),
+    ]);
   }
+
+  // Topics never fetched server-side — client loads them lazily
+  const topicsWithMovies = TOPICS.map((t) => ({ ...t, movies: [] }));
 
   return (
     <main className="min-h-screen bg-background text-foreground">
       <Header
-        categories={categories}
-        countries={countries}
-        topics={topics}
+        categories={categories as any[]}
+        countries={countries as any[]}
+        topics={TOPICS}
       />
 
       {hasFilters ? (
@@ -130,9 +116,9 @@ export default async function Home({ searchParams }: HomeProps) {
         <HomeClient
           initialMovies={initialMovies}
           initialTopicsWithMovies={topicsWithMovies}
-          topics={topics}
+          topics={TOPICS}
           featuredMovie={featuredMovie}
-          categories={categories}
+          categories={categories as any[]}
         />
       )}
 
@@ -141,4 +127,3 @@ export default async function Home({ searchParams }: HomeProps) {
     </main>
   );
 }
-

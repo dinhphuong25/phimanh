@@ -31,7 +31,8 @@ export default function HeroSection({ movie }: HeroSectionProps) {
                     fill
                     priority
                     sizes="100vw"
-                    className="object-cover object-center animate-fade-in"
+                    quality={85}
+                    className="object-cover object-center hero-fade-in"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-r from-black via-black/30 to-transparent" />
@@ -84,7 +85,7 @@ export default function HeroSection({ movie }: HeroSectionProps) {
 
                         {episodeCount && (
                             <span className="bg-white/10 backdrop-blur-md border border-white/20 px-3 py-2 text-sm font-semibold text-white rounded-lg">
-                                Tập {String(episodeCount).replace(/^0+/, '')}
+                                Tập {String(episodeCount).replace(/^[Tt]ập\s*/i, '').replace(/^0+/, '')}
                             </span>
                         )}
                     </div>
@@ -117,6 +118,7 @@ export default function HeroSection({ movie }: HeroSectionProps) {
                             onClick={() => showLoading()}
                             className="group flex items-center gap-2 bg-gradient-to-r from-primary to-amber-500 hover:from-amber-500 hover:to-primary text-black px-8 py-3 text-base font-bold rounded-full transition-all duration-300 shadow-lg shadow-primary/50 hover:shadow-xl hover:scale-105"
                             prefetch={false}
+                            aria-label={`Xem ngay ${movie.name}`}
                         >
                             <Play className="w-5 h-5 fill-current" />
                             <span>Xem Ngay</span>
@@ -129,6 +131,7 @@ export default function HeroSection({ movie }: HeroSectionProps) {
                                     contentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                 }
                             }}
+                            aria-label="Cuộn xuống danh sách phim"
                             className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/30 px-8 py-3 text-base font-semibold text-white rounded-full hover:bg-white/20 transition-all duration-300"
                         >
                             <Info className="w-5 h-5" />
@@ -139,30 +142,6 @@ export default function HeroSection({ movie }: HeroSectionProps) {
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent pointer-events-none" />
-
-            {/* CSS Animations - NO JS state needed */}
-            <style jsx>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes slideUp {
-                    from { 
-                        opacity: 0;
-                        transform: translateY(40px);
-                    }
-                    to { 
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-                .animate-fade-in {
-                    animation: fadeIn 1s ease-out;
-                }
-                .animate-slide-up {
-                    animation: slideUp 1s ease-out 0.3s backwards;
-                }
-            `}</style>
         </div>
     );
 }

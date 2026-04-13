@@ -45,6 +45,7 @@ export default class PhimApi {
         Referer: "https://rapphimchill.pro",
         "User-Agent": "phimanh-bot/2.0",
       },
+      next: { revalidate: 86400 }, // Cache categories for 24 hours
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();
@@ -58,6 +59,7 @@ export default class PhimApi {
         Referer: "https://rapphimchill.pro",
         "User-Agent": "phimanh-bot/2.0",
       },
+      next: { revalidate: 86400 }, // Cache countries for 24 hours
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();

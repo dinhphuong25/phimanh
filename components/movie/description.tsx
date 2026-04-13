@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
+import Cookies from "js-cookie";
 import Episode from "./episode";
 const VideoPlayer = dynamic(() => import("../player/video-player"), {
   ssr: false,
@@ -92,8 +93,7 @@ export default function Description({ movie, serverData }: any) {
 
   // Save movie to recently watched
   useEffect(() => {
-    const Cookies = require('js-cookie');
-    const recentlyWatched = JSON.parse(Cookies.get('recentlyWatched') || '[]');
+    const recentlyWatched = JSON.parse(Cookies.get("recentlyWatched") || "[]");
     const movieEntry = {
       slug: movie.slug,
       name: movie.name,
@@ -107,7 +107,7 @@ export default function Description({ movie, serverData }: any) {
     filtered.unshift(movieEntry); // Add to front
     // Keep only last 10
     const updated = filtered.slice(0, 10);
-    Cookies.set('recentlyWatched', JSON.stringify(updated), { expires: 30 }); // Expires in 30 days
+    Cookies.set("recentlyWatched", JSON.stringify(updated), { expires: 30 });
   }, [movie.slug]);
 
   // Auto-load last played episode or first episode on component mount, prioritizing "Thuyết Minh" server

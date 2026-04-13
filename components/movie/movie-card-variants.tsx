@@ -120,7 +120,7 @@ export const MovieCardDefault = memo(function MovieCardDefault({ movie }: { movi
             </span>
             {movie.episode_current && (
               <span className="text-primary font-semibold">
-                Tập {String(movie.episode_current).replace(/^0+/, '')}
+                Tập {String(movie.episode_current).replace(/^[Tt]ập\s*/i, '').replace(/^0+/, '')}
               </span>
             )}
           </div>

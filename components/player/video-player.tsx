@@ -816,12 +816,12 @@ const VideoPlayer = ({
         <div className="px-4 pb-4 pt-2 flex items-center justify-between gap-4 pointer-events-auto">
           {/* Left Controls */}
           <div className="flex items-center gap-2 md:gap-4">
-            <Button variant="ghost" size="icon" onClick={togglePlay} className="text-white hover:bg-white/20">
+            <Button variant="ghost" size="icon" onClick={togglePlay} className="text-white hover:bg-white/20" aria-label={isPlaying ? "Tạm dừng" : "Phát"}>
               {isPlaying ? <Pause className="w-6 h-6 fill-white" /> : <Play className="w-6 h-6 fill-white" />}
             </Button>
 
             <div className="flex items-center gap-1 group/volume">
-              <Button variant="ghost" size="icon" onClick={toggleMute} className="text-white hover:bg-white/20 w-8 h-8">
+              <Button variant="ghost" size="icon" onClick={toggleMute} className="text-white hover:bg-white/20 w-8 h-8" aria-label={isMuted || volume === 0 ? "Bật âm thanh" : "Tắt âm thanh"}>
                 {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </Button>
               <div className="w-0 overflow-hidden group-hover/volume:w-20 transition-all duration-300 ease-in-out">
@@ -846,7 +846,7 @@ const VideoPlayer = ({
             {/* Settings Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" aria-label="Cài đặt">
                   <Settings className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -881,7 +881,7 @@ const VideoPlayer = ({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-white hover:bg-white/20">
+            <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-white hover:bg-white/20" aria-label={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>
               {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
             </Button>
           </div>

@@ -1,19 +1,14 @@
 "use client";
 
 import EnhancedButton from "@/components/ui/enhanced-button";
-import EnhancedInput from "@/components/ui/enhanced-input";
-import SearchAutoComplete from "@/components/search/search-autocomplete";
-import {
-  MaterialRipple,
-  MaterialModal,
-} from "@/components/ui/material-animations";
-import { Suspense, useRef, useState, useEffect } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import FilterPanel from "@/components/movie/filter-panel";
+import SearchPanel from "@/components/search/search-autocomplete";
+import { Suspense, useRef, useState, useEffect, useCallback } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import Sidebar from "@/components/sidebar";
 import Link from "next/link";
 import { useLoading } from "@/components/ui/loading-context";
-import { Search, Menu, X } from "lucide-react";
+import { Search, Menu } from "lucide-react";
+import { throttle } from "@/lib/api-cache";
 
 interface HeaderProps {
   categories?: { slug: string; name: string }[];
@@ -36,100 +31,24 @@ function Header({
 }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const { showLoading, hideLoading } = useLoading();
   const [showSidebar, setShowSidebar] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { showLoading, hideLoading } = useLoading();
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Scroll detection for header background
+  // Throttled scroll handler to prevent excessive re-renders
+  const handleScroll = useCallback(
+    throttle(() => setIsScrolled(window.scrollY > 50), 100),
+    []
+  );
+
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [handleScroll]);
 
-  const isActiveLink = (href: string) => {
-    return pathname === href;
-  };
-
-  const isActiveTopic = (topicSlug: string) => {
-    return pathname === "/" && searchParams.get("topic") === topicSlug;
-  };
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      showLoading();
-      try {
-        await router.push(
-          `/search?query=${encodeURIComponent(searchQuery.trim())}`
-        );
-      } finally {
-        hideLoading();
-        setShowSearch(false);
-        setSearchQuery("");
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }
-    }
-  };
-
-  // Fetch suggestions as user types
-  useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (searchQuery.trim().length < 2) {
-        setSuggestions([]);
-        setShowSuggestions(false);
-        return;
-      }
-      try {
-        const res = await fetch(
-          `https://phimapi.com/v1/api/tim-kiem?keyword=${encodeURIComponent(
-            searchQuery.trim()
-          )}&limit=6`
-        );
-        const data = await res.json();
-        setSuggestions(data.data.items || []);
-        setShowSuggestions(true);
-      } catch {
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }
-    };
-    fetchSuggestions();
-  }, [searchQuery]);
-
-  // Keyboard navigation for suggestions
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showSuggestions || suggestions.length === 0) return;
-    if (e.key === "ArrowDown") {
-      setHighlightedIndex((prev) => Math.min(prev + 1, suggestions.length - 1));
-    } else if (e.key === "ArrowUp") {
-      setHighlightedIndex((prev) => Math.max(prev - 1, 0));
-    } else if (e.key === "Enter" && highlightedIndex >= 0) {
-      const selected = suggestions[highlightedIndex];
-      if (selected) {
-        showLoading();
-        try {
-          router.push(`/watch?slug=${selected.slug}`);
-        } finally {
-          hideLoading();
-          setShowSearch(false);
-          setSearchQuery("");
-          setSuggestions([]);
-          setShowSuggestions(false);
-        }
-      }
-    }
-  };
+  const isActiveLink = (href: string) => pathname === href;
 
   return (
     <nav className={`fixed top-0 z-50 w-full transition-all duration-300 border-b ${isScrolled ? 'bg-black/95 backdrop-blur-md border-white/5' : 'bg-black/60 backdrop-blur-sm border-transparent'}`}>
@@ -142,9 +61,14 @@ function Header({
           >
             {/* Rạp Phim Chill Style Logo */}
             <div className="relative flex items-center gap-2">
-              {/* Yellow Play Icon */}
-              <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-primary flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
-                <svg className="w-4 h-4 text-black ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+              {/* Yellow Play Icon with Animated Rings */}
+              <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-primary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                {/* Ping animation ring */}
+                <div className="absolute inset-0 rounded-full border border-primary/60 animate-[ping_2.5s_ease-out_infinite]" />
+                {/* Pulse animation ring */}
+                <div className="absolute inset-0 rounded-full border border-primary/30 animate-[pulse_2s_ease-in-out_infinite] scale-125" />
+                
+                <svg className="w-4 h-4 text-black ml-0.5 relative z-10" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
@@ -164,53 +88,29 @@ function Header({
 
         {/* Right side buttons */}
         <div className="flex items-center space-x-1 sm:space-x-2">
-          {/* Menu Button */}
           <EnhancedButton
             variant="text"
             size="small"
             onClick={() => setShowSidebar(!showSidebar)}
-            icon={<Menu />}
+            icon={<Menu aria-hidden="true" />}
+            aria-label="Mở menu điều hướng"
           />
-
-          {/* Search Button */}
           <EnhancedButton
             variant="text"
             size="small"
             onClick={() => setShowSearch(!showSearch)}
-            icon={<Search />}
+            icon={<Search aria-hidden="true" />}
+            aria-label="Mở tìm kiếm"
           />
         </div>
       </div>
 
-      {/* Enhanced Search Modal */}
-      <MaterialModal
+      {/* Search Panel */}
+      <SearchPanel
         open={showSearch}
-        onClose={() => {
-          setShowSearch(false);
-          setSearchQuery("");
-          setSuggestions([]);
-          setShowSuggestions(false);
-        }}
-      >
-        <div className="w-full max-w-2xl">
-          <SearchAutoComplete
-            categories={categories}
-            maxResults={8}
-            onSuggestionSelect={(suggestion) => {
-              if (suggestion.type === "movie") {
-                showLoading();
-                router.push(`/watch?slug=${suggestion.slug}`);
-                hideLoading();
-              } else if (suggestion.type === "category") {
-                showLoading();
-                router.push(`/danh-sach/${suggestion.slug}`);
-                hideLoading();
-              }
-              setShowSearch(false);
-            }}
-          />
-        </div>
-      </MaterialModal>
+        onClose={() => setShowSearch(false)}
+        categories={categories}
+      />
 
       {/* Sidebar */}
       <Sidebar

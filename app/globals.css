@@ -8,6 +8,7 @@
   .skeleton-shimmer {
     animation: shimmer 2s infinite linear;
     background-size: 200% 100%;
+    will-change: transform;
   }
 }
 
@@ -15,6 +16,30 @@
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
+
+@keyframes shimmerBanner {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@keyframes heroFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes heroSlideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-fade-in {
+  animation: heroFadeIn 1s ease-out;
+}
+
+.animate-slide-up {
+  animation: heroSlideUp 1s ease-out 0.3s backwards;
+}
+
 
 @layer base {
   :root {
@@ -109,31 +134,18 @@
     @apply border-border;
   }
 
+  body {
+    @apply bg-background text-foreground;
+  }
+
   /* Font family setup */
   html {
     font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
     scroll-behavior: smooth;
   }
 
-  body {
-    @apply bg-background text-foreground;
-    /* Prevent flash of unstyled content during hydration */
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  /* Show body after hydration or fallback timeout */
-  body.hydrated,
-  body.fallback-show {
-    opacity: 1;
-  }
-
   /* Hide browser extension attributes to prevent hydration mismatch */
   *[bis_skin_checked],
-  *[__codelineno],
-  *[__codelineno_highlight],
-  *[data-adblock],
-  *[data-adblockkey],
   *[cz-shortcut-listen],
   *[data-gramm_editor],
   *[data-new-gr-c-s-check-loaded],
@@ -189,8 +201,8 @@
 .animate-shimmer {
   background-size: 200% auto;
   animation: shimmer 2s linear infinite;
+  will-change: background-position;
 }
-
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;

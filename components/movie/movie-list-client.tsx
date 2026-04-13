@@ -37,6 +37,9 @@ export default function MovieListClient({
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const proxyFetch = (url: string) =>
+    fetch(`/api/phim?url=${encodeURIComponent(url)}`).then((r) => r.json());
+
   const fetchMovies = async (isRefresh = false) => {
     if (isRefresh) {
       setIsRefreshing(true);
@@ -56,19 +59,11 @@ export default function MovieListClient({
       const limit = searchParams.get("limit") || "20";
 
       let url: string;
-      let usesV1Api = true; // Flag để xác định cách parse response
-
-      // Priority order:
-      // 1. Advanced filters (typeList, sortField, filterCategory, filterYear kết hợp)
-      // 2. Country-only filter -> /v1/api/quoc-gia/{slug}
-      // 3. Category from props -> /v1/api/the-loai/{slug}
-      // 4. Topic from props -> /v1/api/danh-sach/{slug}
-      // 5. Default -> /danh-sach/phim-moi-cap-nhat (không dùng v1)
+      let usesV1Api = true;
 
       const hasAdvancedFilters = typeList || sortField || filterCategory || filterYear;
 
       if (hasAdvancedFilters || (filterCountry && (typeList || filterCategory || filterYear))) {
-        // Lọc nâng cao - sử dụng danh-sach với các params
         const baseType = typeList || "phim-bo";
         const urlObj = new URL(`https://phimapi.com/v1/api/danh-sach/${baseType}`);
         urlObj.searchParams.set("page", String(index));
@@ -81,22 +76,18 @@ export default function MovieListClient({
         if (filterYear) urlObj.searchParams.set("year", filterYear);
         url = urlObj.toString();
       } else if (filterCountry) {
-        // Lọc theo quốc gia đơn thuần
         url = `https://phimapi.com/v1/api/quoc-gia/${filterCountry}?page=${index}&limit=${limit}`;
       } else if (category) {
-        // Lọc theo thể loại (props)
         url = `https://phimapi.com/v1/api/the-loai/${category}?page=${index}&limit=${limit}`;
       } else if (topic) {
-        // Lọc theo topic (props)
         url = `https://phimapi.com/v1/api/danh-sach/${topic}?page=${index}&limit=${limit}`;
       } else {
-        // Mặc định - phim mới cập nhật (API khác, không dùng v1)
         url = `https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=${index}`;
         usesV1Api = false;
       }
 
-      const res = await fetch(url);
-      const data = await res.json();
+      const data = await proxyFetch(url);
+
 
       // Parse response dựa trên loại API
       if (usesV1Api) {
