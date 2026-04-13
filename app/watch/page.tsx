@@ -52,7 +52,7 @@ export default async function WatchPage({ searchParams }: any) {
   try {
     const data = await getMovieData(slug);
     movie = data?.movie;
-    server = data?.server || data?.episodes;
+    server = data?.server;
   } catch {
     notFound();
   }
