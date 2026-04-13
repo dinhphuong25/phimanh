@@ -1,28 +1,8 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, useRef, useMemo, memo } from "react";
-import {
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Box,
-  Typography,
-  Paper,
-  IconButton,
-  Fade,
-  Chip,
-  SelectChangeEvent,
-  Stack,
-} from "@mui/material";
-import {
-  FilterList as FilterIcon,
-  Close as CloseIcon,
-  RestartAlt as ResetIcon,
-  Check as CheckIcon,
-} from "@mui/icons-material";
+import { useState, useMemo, memo } from "react";
+import { SlidersHorizontal, X, RotateCcw, Check, ChevronDown } from "lucide-react";
 
 interface FilterPanelProps {
   categories?: { slug: string; name: string }[];
@@ -30,7 +10,7 @@ interface FilterPanelProps {
 }
 
 const TYPE_LIST_OPTIONS = [
-  { value: "all", label: "Tất Cả" },
+  { value: "", label: "Tất Cả" },
   { value: "phim-bo", label: "Phim Bộ" },
   { value: "phim-le", label: "Phim Lẻ" },
   { value: "tv-shows", label: "TV Shows" },
@@ -41,7 +21,7 @@ const TYPE_LIST_OPTIONS = [
 ];
 
 const SORT_FIELD_OPTIONS = [
-  { value: "modified.time", label: "Thời gian cập nhật" },
+  { value: "modified.time", label: "Mới cập nhật" },
   { value: "_id", label: "ID Phim" },
   { value: "year", label: "Năm phát hành" },
 ];
@@ -52,20 +32,46 @@ const SORT_TYPE_OPTIONS = [
 ];
 
 const SORT_LANG_OPTIONS = [
-  { value: "all", label: "Tất Cả" },
+  { value: "", label: "Tất Cả" },
   { value: "vietsub", label: "Vietsub" },
   { value: "thuyet-minh", label: "Thuyết Minh" },
   { value: "long-tieng", label: "Lồng Tiếng" },
 ];
 
-const LIMIT_OPTIONS = [
-  { value: "10", label: "10" },
-  { value: "20", label: "20" },
-  { value: "30", label: "30" },
-  { value: "40", label: "40" },
-  { value: "50", label: "50" },
-  { value: "64", label: "64" },
-];
+// Reusable native <select> with glassmorphism styling
+function NativeSelect({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-[11px] font-semibold text-white/50 uppercase tracking-wider">
+        {label}
+      </label>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full appearance-none bg-white/5 border border-white/10 text-white text-sm rounded-lg px-3 py-2 pr-8 focus:outline-none focus:border-primary/60 focus:bg-white/10 transition-colors cursor-pointer"
+        >
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value} className="bg-zinc-900 text-white">
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
+      </div>
+    </div>
+  );
+}
 
 const FilterPanel = ({ categories = [], countries = [] }: FilterPanelProps) => {
   const router = useRouter();
@@ -74,366 +80,141 @@ const FilterPanel = ({ categories = [], countries = [] }: FilterPanelProps) => {
   const [filters, setFilters] = useState({
     typeList: searchParams.get("typeList") || "",
     sortField: searchParams.get("sortField") || "modified.time",
-    sortType: searchParams.get("sortType") || "",
+    sortType: searchParams.get("sortType") || "desc",
     sortLang: searchParams.get("sortLang") || "",
     category: searchParams.get("category") || "",
     country: searchParams.get("country") || "",
     year: searchParams.get("year") || "",
-    limit: searchParams.get("limit") || "20",
   });
-
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const YEAR_OPTIONS = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    return Array.from({ length: currentYear - 1970 + 1 }, (_, i) => ({
-      value: String(currentYear - i),
-      label: String(currentYear - i),
-    }));
+    const yr = new Date().getFullYear();
+    return [
+      { value: "", label: "Tất cả" },
+      ...Array.from({ length: yr - 1970 + 1 }, (_, i) => ({
+        value: String(yr - i),
+        label: String(yr - i),
+      })),
+    ];
   }, []);
 
-  const handleFilterChange = (key: string, value: string) => {
+  const set = (key: string, value: string) =>
     setFilters((prev) => ({ ...prev, [key]: value }));
-  };
 
-  const handleSelectChange = (key: string) => (event: SelectChangeEvent<string>) => {
-    handleFilterChange(key, event.target.value);
-  };
-
-  const applyFilters = async () => {
+  const applyFilters = () => {
     setIsOpen(false);
-    const params = new URLSearchParams();
-    params.set("typeList", filters.typeList);
-    params.set("sortField", filters.sortField);
-    params.set("sortType", filters.sortType);
-    params.set("sortLang", filters.sortLang);
-    if (filters.category) params.set("category", filters.category);
-    if (filters.country) params.set("country", filters.country);
-    if (filters.year) params.set("year", filters.year);
-    params.set("limit", filters.limit);
-
-    await router.push(`/?${params.toString()}`);
+    const p = new URLSearchParams();
+    if (filters.typeList) p.set("typeList", filters.typeList);
+    if (filters.sortField) p.set("sortField", filters.sortField);
+    if (filters.sortType) p.set("sortType", filters.sortType);
+    if (filters.sortLang) p.set("sortLang", filters.sortLang);
+    if (filters.category) p.set("category", filters.category);
+    if (filters.country) p.set("country", filters.country);
+    if (filters.year) p.set("year", filters.year);
+    router.push(`/?${p.toString()}`);
   };
 
-  const resetFilters = async () => {
+  const resetFilters = () => {
     setIsOpen(false);
-    await router.push("/");
+    router.push("/");
   };
 
-  const hasActiveFilters =
-    filters.typeList !== "phim-bo" ||
-    filters.category ||
-    filters.country ||
-    filters.year ||
-    filters.sortField !== "modified.time" ||
-    filters.sortType !== "desc" ||
-    filters.sortLang !== "vietsub" ||
-    filters.limit !== "10";
+  const hasActive = !!(
+    filters.typeList || filters.category || filters.country || filters.year ||
+    filters.sortLang || filters.sortField !== "modified.time" || filters.sortType !== "desc"
+  );
 
   return (
-    <Box sx={{ position: "relative" }}>
-      <Button
+    <div className="relative">
+      {/* Trigger button */}
+      <button
         onClick={() => setIsOpen(!isOpen)}
-        variant={hasActiveFilters ? "contained" : "outlined"}
-        color={hasActiveFilters ? "primary" : "inherit"}
-        startIcon={<FilterIcon />}
-        sx={{
-          minWidth: "40px",
-          px: { xs: 1, md: 2 },
-          borderRadius: 2,
-          textTransform: "none",
-          fontWeight: 600,
-          whiteSpace: "nowrap",
-        }}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border ${
+          hasActive
+            ? "bg-primary text-black border-primary"
+            : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10"
+        }`}
+        aria-label="Bộ lọc phim"
       >
-        <Box
-          component="span"
-          sx={{
-            display: { xs: "none", md: "inline" },
-            mr: hasActiveFilters ? 0.5 : 0
-          }}
-        >
-          Lọc
-        </Box>
-        {hasActiveFilters && (
-          <Box
-            component="span"
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 18,
-              height: 18,
-              borderRadius: "50%",
-              backgroundColor: "secondary.main",
-              color: "secondary.contrastText",
-              fontSize: "10px",
-              fontWeight: "bold",
-              ml: { xs: 0, md: 0.5 },
-            }}
-          >
+        <SlidersHorizontal className="w-3.5 h-3.5" />
+        <span className="hidden sm:inline">Lọc</span>
+        {hasActive && (
+          <span className="w-4 h-4 rounded-full bg-black/30 text-[10px] font-bold flex items-center justify-center">
             !
-          </Box>
+          </span>
         )}
-      </Button>
+      </button>
 
-      <Fade in={isOpen}>
-        <Paper
-          elevation={8}
-          sx={{
-            position: { xs: "fixed", md: "absolute" },
-            left: { xs: 16, md: "auto" },
-            right: { xs: 16, md: 16 },
-            top: { xs: 80, md: "100%" },
-            width: { xs: "auto", md: 400 },
-            maxWidth: { xs: "calc(100vw - 32px)", md: 400 },
-            maxHeight: { xs: "calc(100vh - 120px)", md: "80vh" },
-            overflow: "auto",
-            zIndex: 1300,
-            mt: { md: 1 },
-            p: 3,
-            borderRadius: 3,
-            backdropFilter: "blur(10px)",
-            background: (theme) =>
-              theme.palette.mode === "dark"
-                ? "rgba(18, 18, 18, 0.95)"
-                : "rgba(255, 255, 255, 0.95)",
-            border: (theme) =>
-              `1px solid ${
-                theme.palette.mode === "dark"
-                  ? "rgba(255, 255, 255, 0.12)"
-                  : "rgba(0, 0, 0, 0.12)"
-              }`,
-            transform: { md: "translateX(-100%)" },
-          }}
-        >
-          {/* Header */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 3,
-            }}
+      {/* Dropdown panel */}
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-[59]"
+            onClick={() => setIsOpen(false)}
+          />
+
+          <div
+            className="absolute right-0 top-full mt-2 z-[60] w-[340px] max-w-[calc(100vw-32px)] rounded-2xl border border-white/10 shadow-2xl shadow-black/60 overflow-hidden"
+            style={{ background: "rgba(12,12,14,0.97)", backdropFilter: "blur(20px)" }}
           >
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 700,
-                background: "linear-gradient(45deg, #2196F3, #9C27B0)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              Bộ Lọc Nâng Cao
-            </Typography>
-            <IconButton
-              onClick={() => setIsOpen(false)}
-              size="small"
-              sx={{ 
-                bgcolor: "action.hover",
-                "&:hover": { bgcolor: "action.selected" }
-              }}
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </Box>
-
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-              gap: 3,
-            }}
-          >
-            {/* Type List */}
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Loại Phim</InputLabel>
-              <Select
-                value={filters.typeList}
-                onChange={handleSelectChange("typeList")}
-                label="Loại Phim"
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <h3 className="font-bold text-white text-sm">Bộ Lọc Nâng Cao</h3>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                aria-label="Đóng bộ lọc"
               >
-                {TYPE_LIST_OPTIONS.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-            {/* Sort Field */}
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Sắp Xếp Theo</InputLabel>
-              <Select
-                value={filters.sortField}
-                onChange={handleSelectChange("sortField")}
-                label="Sắp Xếp Theo"
-              >
-                {SORT_FIELD_OPTIONS.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Sort Type */}
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Kiểu Sắp Xếp</InputLabel>
-              <Select
-                value={filters.sortType}
-                onChange={handleSelectChange("sortType")}
-                label="Kiểu Sắp Xếp"
-              >
-                {SORT_TYPE_OPTIONS.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Sort Language */}
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Ngôn Ngữ</InputLabel>
-              <Select
-                value={filters.sortLang}
-                onChange={handleSelectChange("sortLang")}
-                label="Ngôn Ngữ"
-              >
-                {SORT_LANG_OPTIONS.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Category */}
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Thể Loại</InputLabel>
-              <Select
-                value={filters.category || "all"}
-                onChange={(e) =>
-                  handleFilterChange("category", e.target.value === "all" ? "" : e.target.value)
-                }
+            {/* Filters grid */}
+            <div className="p-4 grid grid-cols-2 gap-3">
+              <NativeSelect label="Loại Phim" value={filters.typeList} onChange={(v) => set("typeList", v)} options={TYPE_LIST_OPTIONS} />
+              <NativeSelect label="Sắp Xếp Theo" value={filters.sortField} onChange={(v) => set("sortField", v)} options={SORT_FIELD_OPTIONS} />
+              <NativeSelect label="Kiểu Sắp Xếp" value={filters.sortType} onChange={(v) => set("sortType", v)} options={SORT_TYPE_OPTIONS} />
+              <NativeSelect label="Ngôn Ngữ" value={filters.sortLang} onChange={(v) => set("sortLang", v)} options={SORT_LANG_OPTIONS} />
+              <NativeSelect
                 label="Thể Loại"
-              >
-                <MenuItem value="all">Tất cả</MenuItem>
-                {categories.map((cat) => (
-                  <MenuItem key={cat.slug} value={cat.slug}>
-                    {cat.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Country */}
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Quốc Gia</InputLabel>
-              <Select
-                value={filters.country || "all"}
-                onChange={(e) =>
-                  handleFilterChange("country", e.target.value === "all" ? "" : e.target.value)
-                }
+                value={filters.category}
+                onChange={(v) => set("category", v)}
+                options={[{ value: "", label: "Tất cả" }, ...categories.map((c) => ({ value: c.slug, label: c.name }))]}
+              />
+              <NativeSelect
                 label="Quốc Gia"
-              >
-                <MenuItem value="all">Tất cả</MenuItem>
-                {countries.map((country) => (
-                  <MenuItem key={country.slug} value={country.slug}>
-                    {country.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                value={filters.country}
+                onChange={(v) => set("country", v)}
+                options={[{ value: "", label: "Tất cả" }, ...countries.map((c) => ({ value: c.slug, label: c.name }))]}
+              />
+              <div className="col-span-2">
+                <NativeSelect label="Năm Phát Hành" value={filters.year} onChange={(v) => set("year", v)} options={YEAR_OPTIONS} />
+              </div>
+            </div>
 
-            {/* Year */}
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Năm Phát Hành</InputLabel>
-              <Select
-                value={filters.year || "all"}
-                onChange={(e) =>
-                  handleFilterChange("year", e.target.value === "all" ? "" : e.target.value)
-                }
-                label="Năm Phát Hành"
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-2 px-4 pb-4">
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-white/60 hover:text-white border border-white/10 hover:bg-white/5 transition-colors"
               >
-                <MenuItem value="all">Tất cả</MenuItem>
-                {YEAR_OPTIONS.map((year) => (
-                  <MenuItem key={year.value} value={year.value}>
-                    {year.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Limit */}
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Số Lượng</InputLabel>
-              <Select
-                value={filters.limit}
-                onChange={handleSelectChange("limit")}
-                label="Số Lượng"
+                <RotateCcw className="w-3.5 h-3.5" />
+                Đặt Lại
+              </button>
+              <button
+                onClick={applyFilters}
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold bg-primary text-black hover:bg-primary/90 transition-colors"
               >
-                {LIMIT_OPTIONS.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-
-          {/* Action Buttons */}
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              justifyContent: "flex-end",
-              pt: 3,
-              mt: 3,
-              borderTop: (theme) =>
-                `1px solid ${
-                  theme.palette.mode === "dark"
-                    ? "rgba(255, 255, 255, 0.12)"
-                    : "rgba(0, 0, 0, 0.12)"
-                }`,
-            }}
-          >
-            <Button
-              variant="outlined"
-              onClick={resetFilters}
-              disabled={isLoading}
-              startIcon={<ResetIcon />}
-              sx={{ textTransform: "none", borderRadius: 2 }}
-            >
-              Đặt Lại
-            </Button>
-            <Button
-              variant="contained"
-              onClick={applyFilters}
-              disabled={isLoading}
-              startIcon={<CheckIcon />}
-              sx={{
-                textTransform: "none",
-                borderRadius: 2,
-                background: "linear-gradient(45deg, #2196F3, #9C27B0)",
-                "&:hover": {
-                  background: "linear-gradient(45deg, #1976D2, #7B1FA2)",
-                },
-                "&:disabled": {
-                  background: "rgba(0, 0, 0, 0.12)",
-                },
-              }}
-            >
-              {isLoading ? "Đang Tải..." : "Áp Dụng"}
-            </Button>
-          </Box>
-        </Paper>
-      </Fade>
-    </Box>
+                <Check className="w-3.5 h-3.5" />
+                Áp Dụng
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
 };
 

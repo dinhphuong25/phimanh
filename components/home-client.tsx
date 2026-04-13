@@ -10,6 +10,12 @@ import { filterHiddenMovies } from "@/lib/hidden-movies";
 import { LazyRecentlyWatched, LazyTopicSection, SectionSkeleton } from "@/lib/lazy-components";
 import PersonalizedSuggestions from "@/components/search/personalized-suggestions";
 import TrendingSuggestions from "@/components/search/trending-suggestions";
+import dynamic from "next/dynamic";
+
+const ContinueWatching = dynamic(() => import("@/components/movie/continue-watching"), {
+    ssr: false,
+    loading: () => null,
+});
 
 
 interface HomeClientProps {
@@ -146,6 +152,9 @@ function HomeClient({
             <div className="relative bg-background -mt-6 sm:mt-0 pt-4 sm:pt-8 rounded-t-2xl sm:rounded-none z-20">
                 <div className="container mx-auto px-2 sm:px-4 pb-8 sm:pb-16">
                     <div className="space-y-4 sm:space-y-10">
+                        {/* Continue Watching - above everything, client-side localStorage */}
+                        <ContinueWatching />
+
                         {/* New Updates Section */}
                         <section className="new-updates-section">
                             <SectionHeader

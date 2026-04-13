@@ -415,12 +415,14 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
   return createPortal(modalContent, document.body);
 };
 
-// Scroll reveal animation hook
+// Scroll reveal animation hook — pure CSS, no MUI
 export const useScrollReveal = (threshold = 0.1) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -430,61 +432,60 @@ export const useScrollReveal = (threshold = 0.1) => {
       },
       { threshold }
     );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
+    observer.observe(el);
     return () => observer.disconnect();
   }, [threshold]);
 
   return { ref, isVisible };
 };
 
-// Scroll reveal component
+// Scroll reveal component — CSS transitions only, zero MUI
 interface ScrollRevealProps {
   children: React.ReactNode;
   animation?: 'fade' | 'slide' | 'grow';
   direction?: 'up' | 'down' | 'left' | 'right';
   threshold?: number;
+  className?: string;
 }
 
 export const ScrollReveal: React.FC<ScrollRevealProps> = ({
   children,
   animation = 'fade',
   direction = 'up',
-  threshold = 0.1
+  threshold = 0.1,
+  className = '',
 }) => {
   const { ref, isVisible } = useScrollReveal(threshold);
 
-  const renderAnimation = () => {
-    switch (animation) {
-      case 'fade':
-        return (
-          <Fade in={isVisible} timeout={800}>
-            <div>{children}</div>
-          </Fade>
-        );
-      case 'slide':
-        return (
-          <Slide in={isVisible} direction={direction} timeout={800}>
-            <div>{children}</div>
-          </Slide>
-        );
-      case 'grow':
-        return (
-          <Grow in={isVisible} timeout={800}>
-            <div>{children}</div>
-          </Grow>
-        );
-      default:
-        return <div>{children}</div>;
-    }
+  const translate = {
+    up: 'translateY(24px)',
+    down: 'translateY(-24px)',
+    left: 'translateX(24px)',
+    right: 'translateX(-24px)',
+  }[direction];
+
+  const baseStyle: React.CSSProperties = {
+    transition: 'opacity 0.5s ease, transform 0.5s ease',
+    willChange: 'opacity, transform',
+  };
+
+  const hiddenStyle: React.CSSProperties = {
+    opacity: 0,
+    transform: animation === 'grow' ? 'scale(0.92)' : animation === 'slide' ? translate : undefined,
+  };
+
+  const visibleStyle: React.CSSProperties = {
+    opacity: 1,
+    transform: 'none',
   };
 
   return (
-    <div ref={ref}>
-      {renderAnimation()}
+    <div
+      ref={ref}
+      className={className}
+      style={{ ...baseStyle, ...(isVisible ? visibleStyle : hiddenStyle) }}
+    >
+      {children}
     </div>
   );
 };

@@ -20,7 +20,10 @@ export default function DevBanner() {
     useEffect(() => {
         setIsMounted(true);
         const dismissed = localStorage.getItem("devBannerDismissed2");
-        if (!dismissed) setIsVisible(true);
+        if (!dismissed) {
+            setIsVisible(true);
+            document.documentElement.classList.add("banner-visible");
+        }
     }, []);
 
     // Rotate messages every 4 seconds
@@ -39,6 +42,7 @@ export default function DevBanner() {
     const handleDismiss = () => {
         setIsVisible(false);
         localStorage.setItem("devBannerDismissed2", "true");
+        document.documentElement.classList.remove("banner-visible");
     };
 
     const bannerContent = (

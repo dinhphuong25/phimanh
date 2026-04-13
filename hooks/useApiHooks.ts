@@ -10,8 +10,20 @@ interface NewUpdatesData {
 }
 
 const API_BASE = "https://phimapi.com";
-const REFRESH_INTERVAL = 60000; // 60 seconds - optimized refresh interval
-const CACHE_TTL = 30000; // 30 seconds cache
+const REFRESH_INTERVAL = 60000;
+const CACHE_TTL = 30000;
+
+// Route all fetches through /api/phim proxy for server-side caching
+function proxyUrl(url: string): string {
+    if (typeof window === "undefined") return url; // SSR: direct fetch
+    return `/api/phim?url=${encodeURIComponent(url)}`;
+}
+
+async function proxyFetch(url: string): Promise<any> {
+    const res = await fetch(proxyUrl(url));
+    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+    return res.json();
+}
 
 // Phim luôn được ghim làm phim nổi bật trên trang chủ
 const FEATURED_MOVIE_SLUG = "avatar-lua-va-tro-tan";
@@ -19,70 +31,37 @@ const FEATURED_MOVIE_SLUG = "avatar-lua-va-tro-tan";
 // Fetch thông tin phim được ghim để làm hero
 async function fetchFeaturedMovie(): Promise<any | null> {
     const cacheKey = `featured-${FEATURED_MOVIE_SLUG}`;
-    
     return apiCache.fetchWithCache(cacheKey, async () => {
         try {
-            const res = await fetch(`${API_BASE}/phim/${FEATURED_MOVIE_SLUG}`, {
-                headers: {
-                    Referer: "https://phimanh.netlify.app",
-                    "User-Agent": "phimanh-bot/1.0",
-                },
-            });
-            if (!res.ok) return null;
-            const data = await res.json();
+            const data = await proxyFetch(`${API_BASE}/phim/${FEATURED_MOVIE_SLUG}`);
             return data.movie || null;
         } catch {
             return null;
         }
-    }, 300000); // Cache featured movie for 5 minutes
+    }, 300000);
 }
 
 async function fetchNewUpdates(): Promise<any[]> {
     const cacheKey = "new-updates-v2";
-    
     return apiCache.fetchWithCache(cacheKey, async () => {
-        const res = await fetch(`${API_BASE}/danh-sach/phim-moi-cap-nhat-v2?page=1&limit=30`, {
-            headers: {
-                Referer: "https://phimanh.netlify.app",
-                "User-Agent": "phimanh-bot/1.0",
-            },
-        });
-        if (!res.ok) throw new Error("Failed to fetch new updates");
-        const data = await res.json();
+        const data = await proxyFetch(`${API_BASE}/danh-sach/phim-moi-cap-nhat-v2?page=1&limit=30`);
         const movies = data.items || [];
-
-        // Sort by quality - FHD first, then HD, then others
-        const qualityOrder: { [key: string]: number } = {
-            'FHD': 1,
-            'HD': 2,
-            'SD': 3,
-            'CAM': 4
-        };
-
+        const qualityOrder: { [key: string]: number } = { FHD: 1, HD: 2, SD: 3, CAM: 4 };
         movies.sort((a: any, b: any) => {
             const qA = qualityOrder[a.quality?.toUpperCase()] || 5;
             const qB = qualityOrder[b.quality?.toUpperCase()] || 5;
             return qA - qB;
         });
-
         return movies.slice(0, 20);
     }, CACHE_TTL);
 }
 
 async function fetchTopicMovies(slug: string, limit: number = 6): Promise<any[]> {
     const cacheKey = `topic-${slug}-${limit}`;
-    
     return apiCache.fetchWithCache(cacheKey, async () => {
-        const res = await fetch(`${API_BASE}/v1/api/danh-sach/${slug}?page=1&limit=${limit}`, {
-            headers: {
-                Referer: "https://phimanh.netlify.app",
-                "User-Agent": "phimanh-bot/1.0",
-            },
-        });
-        if (!res.ok) throw new Error(`Failed to fetch topic: ${slug}`);
-        const data = await res.json();
+        const data = await proxyFetch(`${API_BASE}/v1/api/danh-sach/${slug}?page=1&limit=${limit}`);
         return data.data?.items || [];
-    }, 120000); // Cache topics for 2 minutes
+    }, 120000);
 }
 
 export function useNewUpdates() {

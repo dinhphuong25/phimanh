@@ -7,7 +7,7 @@ import { WebsiteStructuredData, OrganizationStructuredData } from "@/components/
 import EnhancedGTMTracking from "@/components/seo/enhanced-gtm";
 import MaterialThemeProvider from "@/components/providers/material-theme-provider";
 import HydrationFix from "@/components/ui/hydration-fix";
-import DevBanner from "@/components/ui/dev-banner";
+
 import { PWAInstaller, PerformanceMonitor } from "@/components/pwa-init";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -137,7 +137,6 @@ export default function RootLayout({
         <WebsiteStructuredData url="https://rapphimchill.pro" />
         <OrganizationStructuredData url="https://rapphimchill.pro" />
 
-        <DevBanner />
         <HydrationFix />
         <MaterialThemeProvider>
           <LoadingProvider>

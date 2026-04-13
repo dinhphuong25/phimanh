@@ -16,65 +16,49 @@ const getMovieData = unstable_cache(
 
 export async function generateMetadata({ searchParams }: any) {
   const { slug } = await searchParams;
-  const { movie } = await getMovieData(slug);
-  const watchUrl = `https://rapphimchill.pro/watch?slug=${slug}`;
-  return {
-    title: `${movie.name} - Xem phim HD chất lượng cao | Rạp Phim Chill`,
-    description: movie.content ? movie.content.substring(0, 160) + '...' : `Xem phim ${movie.name} ${movie.origin_name ? `(${movie.origin_name})` : ''} HD chất lượng cao miễn phí tại Rạp Phim Chill.`,
-    keywords: [
-      movie.name,
-      movie.origin_name,
-      `phim ${movie.name}`,
-      `xem phim ${movie.name}`,
-      `${movie.name} vietsub`,
-      `${movie.name} thuyết minh`,
-      'phim HD',
-      'phim chất lượng cao',
-      'xem phim miễn phí',
-      ...movie.category?.map((cat: any) => `phim ${cat.name}`) || [],
-      ...movie.country?.map((country: any) => `phim ${country.name}`) || []
-    ].join(', '),
-    openGraph: {
-      title: `${movie.name} - Xem phim HD chất lượng cao`,
-      description: movie.content ? movie.content.substring(0, 200) : `Xem phim ${movie.name} HD chất lượng cao miễn phí`,
-      url: watchUrl,
-      images: [
-        {
-          url: movie.poster_url,
-          width: 300,
-          height: 450,
-          alt: `Poster phim ${movie.name}`,
-        },
-        ...(movie.thumb_url ? [{
-          url: movie.thumb_url,
-          width: 1200,
-          height: 630,
-          alt: `Hình ảnh phim ${movie.name}`,
-        }] : [])
-      ],
-      type: 'video.movie',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${movie.name} - Xem phim HD chất lượng cao`,
-      description: movie.content ? movie.content.substring(0, 200) : `Xem phim ${movie.name} HD chất lượng cao miễn phí`,
-      images: [movie.thumb_url || movie.poster_url],
-    },
-    alternates: {
-      canonical: watchUrl,
-    },
-  };
+  try {
+    const data = await getMovieData(slug);
+    const movie = data?.movie;
+    if (!movie?.name) return { title: "Xem phim | Rạp Phim Chill" };
+    const watchUrl = `https://rapphimchill.pro/watch?slug=${slug}`;
+    return {
+      title: `${movie.name} - Xem phim HD chất lượng cao | Rạp Phim Chill`,
+      description: movie.content
+        ? movie.content.substring(0, 160) + "..."
+        : `Xem phim ${movie.name} HD chất lượng cao miễn phí tại Rạp Phim Chill.`,
+      openGraph: {
+        title: `${movie.name} - Xem phim HD chất lượng cao`,
+        url: watchUrl,
+        images: movie.poster_url ? [{ url: movie.poster_url, width: 300, height: 450 }] : [],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${movie.name} - Xem phim HD`,
+        images: [movie.thumb_url || movie.poster_url].filter(Boolean),
+      },
+      alternates: { canonical: watchUrl },
+    };
+  } catch {
+    return { title: "Xem phim | Rạp Phim Chill" };
+  }
 }
 
 export default async function WatchPage({ searchParams }: any) {
   const { slug } = await searchParams;
 
-  // Kiểm tra nếu phim bị ẩn
-  if (HIDDEN_MOVIE_SLUGS.includes(slug)) {
+  if (!slug || HIDDEN_MOVIE_SLUGS.includes(slug)) notFound();
+
+  let movie: any, server: any;
+  try {
+    const data = await getMovieData(slug);
+    movie = data?.movie;
+    server = data?.server || data?.episodes;
+  } catch {
     notFound();
   }
 
-  const { movie, server } = await getMovieData(slug);
+  if (!movie?.name) notFound();
+
   const bgImageUrl = movie.thumb_url || movie.poster_url;
 
   const breadcrumbItems = [

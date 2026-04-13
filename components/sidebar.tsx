@@ -192,9 +192,9 @@ function Sidebar({
           <div>
             <Link
               href="/?typeList=phim-chieu-rap"
-              className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${pathname === "/" && searchParams.get("typeList") === "phim-chieu-rap"
-                ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
-                : "hover:bg-gray-100 dark:hover:bg-gray-800"
+              className={`flex items-center space-x-3 p-3.5 rounded-xl transition-all duration-300 ${pathname === "/" && searchParams.get("typeList") === "phim-chieu-rap"
+                ? "bg-primary/15 border border-primary/30 text-primary font-semibold shadow-lg shadow-primary/10"
+                : "hover:bg-white/5 text-white/80 border border-transparent hover:border-white/10"
                 }`}
               onClick={() => handleLinkClick("/?typeList=phim-chieu-rap")}
             >
@@ -221,9 +221,9 @@ function Sidebar({
             <div key={topic.slug}>
               <Link
                 href={`/?topic=${topic.slug}`}
-                className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${isActiveTopic(topic.slug)
-                  ? "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                className={`flex items-center space-x-3 p-3.5 rounded-xl transition-all duration-300 ${isActiveTopic(topic.slug)
+                  ? "bg-primary/15 border border-primary/30 text-primary font-semibold shadow-lg shadow-primary/10"
+                  : "hover:bg-white/5 text-white/80 border border-transparent hover:border-white/10"
                   }`}
                 onClick={() => handleLinkClick(`/?topic=${topic.slug}`)}
               >
@@ -250,7 +250,7 @@ function Sidebar({
           <div>
             <Link
               href="/recently"
-              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="flex items-center space-x-3 p-3.5 rounded-xl hover:bg-white/5 text-white/80 border border-transparent hover:border-white/10 transition-all duration-300"
               onClick={() => handleLinkClick("/recently")}
             >
               <svg
@@ -328,16 +328,16 @@ function Sidebar({
           <div>
             <button
               onClick={() => toggleSection("countries")}
-              className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="flex items-center justify-between w-full p-3.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-all duration-300"
             >
               <div className="flex items-center space-x-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
-                  strokeWidth={1.5}
+                  strokeWidth={2}
                   stroke="currentColor"
-                  className="w-5 h-5"
+                  className="w-5 h-5 text-white"
                 >
                   <path
                     strokeLinecap="round"
@@ -345,28 +345,28 @@ function Sidebar({
                     d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <span className="font-medium">Quốc Gia</span>
+                <span className="font-bold text-white">Quốc Gia</span>
               </div>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
-                strokeWidth={1.5}
+                strokeWidth={2}
                 stroke="currentColor"
-                className={`w-4 h-4 transition-transform ${expandedSections.countries ? "rotate-180" : ""}`}
+                className={`w-4 h-4 text-white/70 transition-transform ${expandedSections.countries ? "rotate-180" : ""}`}
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
             {expandedSections.countries && (
-              <div className="ml-8 mt-2 space-y-1">
+              <div className="ml-8 mt-2 space-y-1 scrollbar-hide">
                 {countries.map((country) => (
                   <Link
                     key={country.slug}
                     href={`/?country=${country.slug}`}
-                    className={`block p-2 text-sm rounded-md transition-colors ${isActiveCountry(country.slug)
-                      ? "bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400"
-                      : "hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className={`block p-2.5 text-sm rounded-lg transition-all duration-300 ${isActiveCountry(country.slug)
+                      ? "bg-primary/10 border border-primary/30 text-primary font-semibold"
+                      : "hover:bg-white/5 text-white/80 hover:text-white"
                       }`}
                     onClick={() => handleLinkClick(`/?country=${country.slug}`)}
                   >
@@ -381,16 +381,16 @@ function Sidebar({
           <div>
             <button
               onClick={() => toggleSection("years")}
-              className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="flex items-center justify-between w-full p-3.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-all duration-300"
             >
               <div className="flex items-center space-x-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
-                  strokeWidth={1.5}
+                  strokeWidth={2}
                   stroke="currentColor"
-                  className="w-5 h-5"
+                  className="w-5 h-5 text-white"
                 >
                   <path
                     strokeLinecap="round"
@@ -398,26 +398,29 @@ function Sidebar({
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                <span className="font-medium">Năm</span>
+                <span className="font-bold text-white">Năm</span>
               </div>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
-                strokeWidth={1.5}
+                strokeWidth={2}
                 stroke="currentColor"
-                className={`w-4 h-4 transition-transform ${expandedSections.years ? "rotate-180" : ""}`}
+                className={`w-4 h-4 text-white/70 transition-transform ${expandedSections.years ? "rotate-180" : ""}`}
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
             {expandedSections.years && (
-              <div className="ml-8 mt-2 space-y-1 max-h-64 overflow-y-auto">
+              <div className="ml-8 mt-2 space-y-1 max-h-64 overflow-y-auto scrollbar-hide">
                 {YEAR_OPTIONS.map((year) => (
                   <Link
                     key={year.value}
                     href={`/?year=${year.value}`}
-                    className="block p-2 text-sm rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className={`block p-2.5 text-sm rounded-lg transition-all duration-300 ${isActiveYear(year.value)
+                      ? "bg-primary/10 border border-primary/30 text-primary font-semibold"
+                      : "hover:bg-white/5 text-white/80 hover:text-white"
+                      }`}
                     onClick={() => handleLinkClick(`/?year=${year.value}`)}
                   >
                     {year.label}

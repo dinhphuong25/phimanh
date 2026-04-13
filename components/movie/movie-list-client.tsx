@@ -1,11 +1,15 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import MovieMinimalCard from "@/components/movie/movie-minimal";
-import Pagination from "@/components/pagination";
-import { ScrollReveal } from "@/components/ui/material-animations";
 import LiveStatus from "@/components/live-status";
 import { filterHiddenMovies } from "@/lib/hidden-movies";
+import { MovieGridSkeleton } from "@/components/movie/movie-skeleton";
+import dynamic from "next/dynamic";
+
+const InfiniteMovieGrid = dynamic(
+  () => import("@/components/movie/infinite-movie-grid"),
+  { ssr: false, loading: () => <MovieGridSkeleton count={10} /> }
+);
 
 interface MovieListClientProps {
   index?: number;
@@ -135,11 +139,9 @@ export default function MovieListClient({
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center pt-8">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-gray-400 text-lg">Đang tải phim...</p>
-        </div>
+      <div className="pt-4 sm:pt-8 px-1 sm:px-0 space-y-6">
+        <div className="h-8 w-48 bg-zinc-800 animate-pulse rounded" />
+        <MovieGridSkeleton count={10} />
       </div>
     );
   }
@@ -169,13 +171,7 @@ export default function MovieListClient({
           <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-white">
             {getPageTitle()}
           </h1>
-          {pageInfo && (
-            <span className="text-gray-400 text-xs sm:text-sm hidden sm:inline">
-              ({pageInfo.totalItems || movies.length} phim)
-            </span>
-          )}
         </div>
-
         <div className="hidden sm:block">
           <LiveStatus
             lastUpdated={lastUpdated}
@@ -185,32 +181,14 @@ export default function MovieListClient({
         </div>
       </div>
 
-      {/* Movie Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-        {movies.map((movie: any, idx: number) => (
-          <ScrollReveal
-            key={movie.slug || movie._id}
-            animation="grow"
-            threshold={0.1}
-          >
-            <div
-              className="aspect-[2/3]"
-              style={{ animationDelay: `${idx * 0.02}s` }}
-            >
-              <MovieMinimalCard movie={movie} />
-            </div>
-          </ScrollReveal>
-        ))}
-      </div>
-
-      {/* Pagination */}
-      {pageInfo && pageInfo.totalPages > 1 && (
-        <div className="mt-6 sm:mt-12 flex justify-center">
-          <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-2 sm:p-4 border border-white/5">
-            <Pagination />
-          </div>
-        </div>
-      )}
+      {/* Infinite scroll grid — replaces paginated grid */}
+      <Suspense fallback={<MovieGridSkeleton count={10} />}>
+        <InfiniteMovieGrid
+          initialMovies={movies}
+          topic={topic}
+          category={category}
+        />
+      </Suspense>
     </div>
   );
 }

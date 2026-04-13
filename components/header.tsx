@@ -7,7 +7,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Sidebar from "@/components/sidebar";
 import Link from "next/link";
 import { useLoading } from "@/components/ui/loading-context";
-import { Search, Menu } from "lucide-react";
+import { Search, Menu, Moon, Sun } from "lucide-react";
 import { throttle } from "@/lib/api-cache";
 
 interface HeaderProps {
@@ -34,6 +34,7 @@ function Header({
   const [showSearch, setShowSearch] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isDark, setIsDark] = useState(true);
   const { showLoading, hideLoading } = useLoading();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -48,10 +49,23 @@ function Header({
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
+  // Sync dark state from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("theme") || "dark";
+    setIsDark(stored === "dark");
+  }, []);
+
+  const toggleTheme = () => {
+    const next = isDark ? "light" : "dark";
+    setIsDark(!isDark);
+    localStorage.setItem("theme", next);
+    document.documentElement.classList.toggle("dark", next === "dark");
+  };
+
   const isActiveLink = (href: string) => pathname === href;
 
   return (
-    <nav className={`fixed top-0 z-50 w-full transition-all duration-300 border-b ${isScrolled ? 'bg-black/95 backdrop-blur-md border-white/5' : 'bg-black/60 backdrop-blur-sm border-transparent'}`}>
+    <nav data-header className={`fixed top-0 z-50 w-full transition-all duration-300 border-b ${isScrolled ? 'bg-black/95 backdrop-blur-md border-white/5' : 'bg-black/60 backdrop-blur-sm border-transparent'}`}>
       <div className="container mx-auto flex h-14 sm:h-16 items-center justify-between px-2 sm:px-4">
         <div className="flex items-center">
           <Link

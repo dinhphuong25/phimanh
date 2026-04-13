@@ -1,157 +1,99 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Button as MuiButton, ButtonProps as MuiButtonProps, CircularProgress } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { forwardRef } from 'react';
+import * as React from "react";
+import { forwardRef } from "react";
 
-// Enhanced Material Button with custom styling
-const StyledButton = styled(MuiButton)(({ theme, variant, color }) => ({
-  borderRadius: 12,
-  textTransform: 'none',
-  fontWeight: 600,
-  fontSize: '0.875rem',
-  padding: '10px 20px',
-  minHeight: '40px',
-  position: 'relative',
-  overflow: 'hidden',
-  transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-  
-  // Ripple effect base
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    background: 'radial-gradient(circle, transparent 1%, rgba(255,255,255,0.1) 1%)',
-    backgroundSize: '15000%',
-    transition: 'background-size 0.3s',
-    pointerEvents: 'none',
-  },
-  
-  '&:active::before': {
-    backgroundSize: '100%',
-    transition: 'background-size 0s',
-  },
-
-  // Variant-specific styles
-  ...(variant === 'contained' && {
-    background: color === 'primary' 
-      ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
-      : undefined,
-    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
-    '&:hover': {
-      boxShadow: '0 4px 16px rgba(59, 130, 246, 0.4)',
-      transform: 'translateY(-1px)',
-    },
-    '&:active': {
-      transform: 'translateY(0)',
-      boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
-    },
-  }),
-  
-  ...(variant === 'outlined' && {
-    borderWidth: 2,
-    '&:hover': {
-      borderWidth: 2,
-      transform: 'translateY(-1px)',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-    },
-  }),
-  
-  ...(variant === 'text' && {
-    '&:hover': {
-      backgroundColor: 'rgba(59, 130, 246, 0.08)',
-      transform: 'translateY(-1px)',
-    },
-  }),
-
-  // Size variants
-  '&.MuiButton-sizeSmall': {
-    padding: '6px 12px',
-    fontSize: '0.75rem',
-    minHeight: '32px',
-    borderRadius: 8,
-  },
-  
-  '&.MuiButton-sizeLarge': {
-    padding: '12px 24px',
-    fontSize: '1rem',
-    minHeight: '48px',
-    borderRadius: 16,
-  },
-
-  // Disabled state
-  '&.Mui-disabled': {
-    opacity: 0.6,
-    transform: 'none',
-    boxShadow: 'none',
-  },
-}));
-
-export interface EnhancedButtonProps extends Omit<MuiButtonProps, 'size'> {
+export interface EnhancedButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
-  size?: 'small' | 'medium' | 'large';
+  size?: "small" | "medium" | "large";
   icon?: React.ReactNode;
-  iconPosition?: 'start' | 'end';
+  iconPosition?: "start" | "end";
+  variant?: "contained" | "outlined" | "text";
 }
 
+const sizeClasses = {
+  small: "px-3 py-1.5 text-xs min-h-[32px] rounded-lg",
+  medium: "px-5 py-2.5 text-sm min-h-[40px] rounded-xl",
+  large: "px-6 py-3 text-base min-h-[48px] rounded-2xl",
+};
+
+const variantClasses = {
+  contained:
+    "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg hover:-translate-y-px",
+  outlined:
+    "border-2 border-primary text-primary hover:bg-primary/10 hover:-translate-y-px",
+  text: "text-white/70 hover:text-white hover:bg-white/10 rounded-lg",
+};
+
 const EnhancedButton = forwardRef<HTMLButtonElement, EnhancedButtonProps>(
-  ({ children, loading = false, disabled, icon, iconPosition = 'start', size = 'medium', ...props }, ref) => {
+  (
+    {
+      children,
+      loading = false,
+      disabled,
+      icon,
+      iconPosition = "start",
+      size = "medium",
+      variant = "text",
+      className = "",
+      ...props
+    },
+    ref
+  ) => {
     const isDisabled = disabled || loading;
-    
-    const renderContent = () => {
-      if (loading) {
-        return (
-          <>
-            <CircularProgress
-              size={16}
-              sx={{ 
-                color: 'inherit',
-                mr: children ? 1 : 0 
-              }}
-            />
-            {children}
-          </>
-        );
-      }
-
-      if (icon) {
-        return iconPosition === 'start' ? (
-          <>
-            <span style={{ fontSize: '18px', marginRight: children ? '8px' : '0', display: 'inline-flex', alignItems: 'center' }}>
-              {icon}
-            </span>
-            {children}
-          </>
-        ) : (
-          <>
-            {children}
-            <span style={{ fontSize: '18px', marginLeft: children ? '8px' : '0', display: 'inline-flex', alignItems: 'center' }}>
-              {icon}
-            </span>
-          </>
-        );
-      }
-
-      return children;
-    };
 
     return (
-      <StyledButton
+      <button
         ref={ref}
         disabled={isDisabled}
-        size={size}
+        className={[
+          "relative inline-flex items-center justify-center font-semibold",
+          "transition-all duration-200 active:scale-95 cursor-pointer",
+          "disabled:opacity-60 disabled:pointer-events-none",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+          sizeClasses[size],
+          variantClasses[variant],
+          className,
+        ].join(" ")}
         {...props}
       >
-        {renderContent()}
-      </StyledButton>
+        {loading && (
+          <svg
+            className="animate-spin w-4 h-4 mr-2 shrink-0"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+            />
+          </svg>
+        )}
+        {!loading && icon && iconPosition === "start" && (
+          <span className={`inline-flex items-center ${children ? "mr-2" : ""}`}>
+            {icon}
+          </span>
+        )}
+        {children}
+        {!loading && icon && iconPosition === "end" && (
+          <span className={`inline-flex items-center ${children ? "ml-2" : ""}`}>
+            {icon}
+          </span>
+        )}
+      </button>
     );
   }
 );
 
-EnhancedButton.displayName = 'EnhancedButton';
+EnhancedButton.displayName = "EnhancedButton";
 
 export default EnhancedButton;

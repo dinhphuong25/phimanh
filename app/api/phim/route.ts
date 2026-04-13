@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Cache trên server 2 phút
-export const revalidate = 120;
+// Dynamic route — cache set per-response via Cache-Control headers
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -11,7 +11,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing url param" }, { status: 400 });
   }
 
-  // Chỉ cho phép gọi tới phimapi.com để tránh SSRF
   let parsedUrl: URL;
   try {
     parsedUrl = new URL(urlParam);
@@ -25,7 +24,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const res = await fetch(parsedUrl.toString(), {
-      next: { revalidate: 120 }, // Next.js Data Cache 2 phút
+      // Next.js Data Cache: revalidate after 5 min, serve stale for 10 more min
+      next: { revalidate: 300 },
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; PhimanhBot/1.0)",
         Accept: "application/json",
@@ -33,17 +33,29 @@ export async function GET(req: NextRequest) {
     });
 
     if (!res.ok) {
-      return NextResponse.json({ error: "Upstream error" }, { status: res.status });
+      return NextResponse.json(
+        { error: "Upstream error" },
+        {
+          status: res.status,
+          headers: { "Cache-Control": "no-store" },
+        }
+      );
     }
 
     const data = await res.json();
 
     return NextResponse.json(data, {
       headers: {
-        "Cache-Control": "public, s-maxage=120, stale-while-revalidate=60",
+        // Browser cache: 5min fresh, serve stale for 10min while revalidating
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+        // Vary only on Accept — prevents unnecessary cache splits
+        Vary: "Accept",
       },
     });
-  } catch (err) {
-    return NextResponse.json({ error: "Fetch failed" }, { status: 502 });
+  } catch {
+    return NextResponse.json(
+      { error: "Fetch failed" },
+      { status: 502, headers: { "Cache-Control": "no-store" } }
+    );
   }
 }
