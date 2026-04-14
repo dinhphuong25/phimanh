@@ -221,7 +221,7 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
           </form>
 
           {/* Results / Trending */}
-          <div className="max-h-[55vh] overflow-y-auto">
+          <div className="max-h-[55vh] overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent pr-1">
             {suggestions.length > 0 ? (
               <ul role="listbox" aria-label="Kết quả tìm kiếm">
                 {/* Section: Movies */}
