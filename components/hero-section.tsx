@@ -30,8 +30,9 @@ export default function HeroSection({ movie }: HeroSectionProps) {
                     alt={movie.name}
                     fill
                     priority
-                    sizes="100vw"
-                    quality={85}
+                    fetchPriority="high"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+                    quality={75}
                     className="object-cover object-center hero-fade-in"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />

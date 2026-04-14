@@ -7,6 +7,7 @@ import { ScrollReveal } from "@/components/ui/material-animations";
 import MovieMinimalCard from "@/components/movie/movie-minimal";
 import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { apiCache } from "@/lib/api-cache";
 
 interface InfiniteMovieGridProps {
   topic?: string;
@@ -71,8 +72,10 @@ export default function InfiniteMovieGrid({
     setLoading(true);
     try {
       const url = buildUrl(page);
-      const res = await fetch(url);
-      const data = await res.json();
+      const data = await apiCache.fetchWithCache(url, async () => {
+        const res = await fetch(url);
+        return res.json();
+      }, 60000);
 
       const items =
         data.data?.items || data.items || [];

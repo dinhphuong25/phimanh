@@ -4,6 +4,7 @@ import { useLoading } from "@/components/ui/loading-context";
 import { memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface MovieMinimalProps {
   movie: any;
@@ -12,6 +13,7 @@ interface MovieMinimalProps {
 // Unified Movie Card - matches MovieCardDefault design for consistency
 export default memo(function MovieMinimalCard({ movie }: MovieMinimalProps) {
   const { showLoading } = useLoading();
+  const router = useRouter();
 
   const imageUrl = movie.poster_url?.startsWith("http")
     ? movie.poster_url
@@ -21,8 +23,10 @@ export default memo(function MovieMinimalCard({ movie }: MovieMinimalProps) {
     <Link 
       href={`/watch?slug=${movie.slug}`}
       onClick={() => showLoading()}
-      className="block h-full w-full text-left group"
+      onMouseEnter={() => router.prefetch(`/watch?slug=${movie.slug}`)}
+      className="block h-full w-full text-left group will-change-transform"
       prefetch={false}
+      style={{ contentVisibility: "auto", containIntrinsicSize: "auto 300px" }}
     >
       <div className="relative h-full w-full overflow-hidden rounded-xl bg-black shadow-md hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 hover:scale-105 aspect-[2/3]">
         {/* Image */}
@@ -30,7 +34,11 @@ export default memo(function MovieMinimalCard({ movie }: MovieMinimalProps) {
           src={imageUrl}
           alt={movie.name}
           fill
-          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+          unoptimized
+          decoding="async"
+          loading="lazy"
+          fetchPriority="auto"
+          sizes="(max-width: 480px) 160px, (max-width: 768px) 50vw, 33vw"
           className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
 

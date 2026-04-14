@@ -2,10 +2,13 @@
 export const revalidate = 60;
 
 import Header from "@/components/header";
-import Footer from "@/components/footer";
 import MovieListClient from "@/components/movie/movie-list-client";
 import HomeClient from "@/components/home-client";
+import dynamic from "next/dynamic";
 import { ScrollToTopFAB } from "@/components/ui/material-fab";
+
+const Footer = dynamic(() => import("@/components/footer"), { ssr: true });
+
 import {
   getCachedCategories,
   getCachedCountries,
@@ -68,8 +71,8 @@ export async function generateMetadata({ searchParams }: HomeProps) {
 }
 
 export default async function Home({ searchParams }: HomeProps) {
-  // Cố tình tạo độ trễ 1.5 giây để hiển thị màn hình Loading theo yêu cầu
-  await new Promise((resolve) => setTimeout(resolve, 1500));
+  // Xoá hoàn toàn độ trễ nhân tạo 3 giây khiến trang Home bị chậm
+  // await new Promise((resolve) => setTimeout(resolve, 3000));
 
   const params = await searchParams;
   const index = Number(params.index) || 1;

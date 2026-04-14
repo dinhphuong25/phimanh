@@ -5,6 +5,7 @@ import LiveStatus from "@/components/live-status";
 import { filterHiddenMovies } from "@/lib/hidden-movies";
 import { MovieGridSkeleton } from "@/components/movie/movie-skeleton";
 import dynamic from "next/dynamic";
+import { apiCache } from "@/lib/api-cache";
 
 const InfiniteMovieGrid = dynamic(
   () => import("@/components/movie/infinite-movie-grid"),
@@ -42,7 +43,9 @@ export default function MovieListClient({
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const proxyFetch = (url: string) =>
-    fetch(`/api/phim?url=${encodeURIComponent(url)}`).then((r) => r.json());
+    apiCache.fetchWithCache(url, () =>
+      fetch(`/api/phim?url=${encodeURIComponent(url)}`).then((r) => r.json())
+    , 60000);
 
   const fetchMovies = async (isRefresh = false) => {
     if (isRefresh) {

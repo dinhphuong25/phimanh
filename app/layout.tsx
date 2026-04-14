@@ -7,6 +7,7 @@ import { WebsiteStructuredData, OrganizationStructuredData } from "@/components/
 import EnhancedGTMTracking from "@/components/seo/enhanced-gtm";
 import MaterialThemeProvider from "@/components/providers/material-theme-provider";
 import HydrationFix from "@/components/ui/hydration-fix";
+import { SplashScreen } from "@/components/ui/splash-screen";
 
 import { PWAInstaller, PerformanceMonitor } from "@/components/pwa-init";
 import { Analytics } from "@vercel/analytics/react";
@@ -120,9 +121,10 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${inter.variable} font-sans antialiased`}
+        className={`${inter.variable} font-sans antialiased bg-background text-foreground`}
         suppressHydrationWarning
       >
+        <SplashScreen />
         {/* Analytics — load sau interaction, không block render */}
         <GTM />
         <EnhancedGTMTracking />

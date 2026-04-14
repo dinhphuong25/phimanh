@@ -44,7 +44,7 @@ const LazyImage = memo(function LazyImage({
   const imageSrc = src?.startsWith("http") ? src : `https://phimimg.com/${src}`;
 
   return (
-    <div ref={imgRef} className={`relative ${className}`}>
+    <div ref={imgRef} className={`relative ${className}`} style={{ contentVisibility: "auto", containIntrinsicSize: "auto 300px" }}>
       {!isLoaded && (
         <div className="absolute inset-0 bg-gray-800 animate-pulse" />
       )}
@@ -54,7 +54,9 @@ const LazyImage = memo(function LazyImage({
           src={hasError ? "/images/placeholder.webp" : imageSrc}
           alt={alt}
           fill
-          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+          unoptimized
+          decoding="async"
+          sizes="(max-width: 480px) 160px, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
           priority={priority}
           onLoad={() => setIsLoaded(true)}
           onError={() => setHasError(true)}

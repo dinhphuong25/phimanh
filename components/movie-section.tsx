@@ -55,10 +55,10 @@ export default function MovieSection({
         </Link>
       </div>
 
-      {/* Grid Layout */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+      {/* Horizontal Scroll Layout for Desktop, Grid for Mobile */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-row gap-3 sm:gap-4 md:overflow-x-auto md:overflow-y-hidden md:snap-x md:snap-mandatory pb-4 md:scrollbar-thin md:scrollbar-thumb-black/20 md:scrollbar-track-transparent">
         {filteredMovies && filteredMovies.length > 0 ? (
-          filteredMovies.map((movie: any, index: number) => {
+          filteredMovies.slice(0, 15).map((movie: any, index: number) => {
             return (
               <ScrollReveal
                 key={`${movie.slug}-${index}`}
@@ -66,7 +66,7 @@ export default function MovieSection({
                 threshold={0.1}
               >
                 <div
-                  className="aspect-[2/3]"
+                  className="aspect-[2/3] w-full md:w-[200px] lg:w-[220px] lg:shrink-0 md:flex-shrink-0 md:snap-start"
                   style={{ animationDelay: `${index * 0.02}s` }}
                 >
                   <MovieMinimalCard movie={movie} />
