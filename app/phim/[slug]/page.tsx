@@ -22,13 +22,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   try {
     const { movie } = await getMovie(slug);
+    
+    const posterUrl = movie.poster_url?.startsWith("http")
+      ? movie.poster_url
+      : `https://phimimg.com/${movie.poster_url}`;
+
     return {
       title: `${movie.name} - Xem phim HD | Rạp Phim Chill`,
       description: movie.content?.substring(0, 160) || `Xem phim ${movie.name} HD miễn phí tại Rạp Phim Chill`,
       openGraph: {
         title: movie.name,
         description: movie.content?.substring(0, 200),
-        images: [{ url: movie.poster_url, width: 300, height: 450, alt: movie.name }],
+        images: [{ url: posterUrl, width: 300, height: 450, alt: movie.name }],
       },
       alternates: { canonical: `https://rapphimchill.pro/phim/${slug}` },
     };

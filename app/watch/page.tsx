@@ -22,6 +22,15 @@ export async function generateMetadata({ searchParams }: any) {
     if (!movie?.name) return { title: "Xem phim | Rạp Phim Chill" };
     const watchUrl = `https://rapphimchill.pro/watch?slug=${slug}`;
     const canonicalUrl = `https://rapphimchill.pro/phim/${slug}`;
+    
+    const posterUrl = movie.poster_url?.startsWith("http") 
+      ? movie.poster_url 
+      : `https://phimimg.com/${movie.poster_url}`;
+      
+    const thumbUrl = movie.thumb_url?.startsWith("http")
+      ? movie.thumb_url
+      : `https://phimimg.com/${movie.thumb_url}`;
+
     return {
       title: `${movie.name} - Xem phim HD chất lượng cao | Rạp Phim Chill`,
       description: movie.content
@@ -30,12 +39,12 @@ export async function generateMetadata({ searchParams }: any) {
       openGraph: {
         title: `${movie.name} - Xem phim HD chất lượng cao`,
         url: watchUrl,
-        images: movie.poster_url ? [{ url: movie.poster_url, width: 300, height: 450 }] : [],
+        images: posterUrl ? [{ url: posterUrl, width: 300, height: 450 }] : [],
       },
       twitter: {
         card: "summary_large_image",
         title: `${movie.name} - Xem phim HD`,
-        images: [movie.thumb_url || movie.poster_url].filter(Boolean),
+        images: [thumbUrl || posterUrl].filter(Boolean),
       },
       alternates: { canonical: canonicalUrl },
     };
