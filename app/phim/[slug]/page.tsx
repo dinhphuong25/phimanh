@@ -30,6 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         description: movie.content?.substring(0, 200),
         images: [{ url: movie.poster_url, width: 300, height: 450, alt: movie.name }],
       },
+      alternates: { canonical: `https://rapphimchill.pro/phim/${slug}` },
     };
   } catch {
     return { title: "Phim | Rạp Phim Chill" };

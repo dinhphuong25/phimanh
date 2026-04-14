@@ -36,44 +36,67 @@ interface BreadcrumbStructuredDataProps {
 }
 
 export function MovieStructuredData({ movie, url }: MovieStructuredDataProps) {
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "Movie",
-    "name": movie.name,
-    "alternateName": movie.origin_name,
-    "description": movie.content,
-    "image": [
-      movie.poster_url,
-      ...(movie.thumb_url ? [movie.thumb_url] : [])
-    ],
-    "url": url,
-    "datePublished": movie.year ? `${movie.year}-01-01` : undefined,
-    "inLanguage": movie.lang || "vi",
-    "genre": movie.category?.map(cat => cat.name) || [],
-    "actor": movie.actor?.map(actor => ({
-      "@type": "Person",
-      "name": actor
-    })) || [],
-    "director": movie.director?.map(director => ({
-      "@type": "Person",
-      "name": director
-    })) || [],
-    "countryOfOrigin": movie.country?.[0]?.name,
-    "duration": movie.time,
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.5",
-      "ratingCount": "1000",
-      "bestRating": "5",
-      "worstRating": "1"
+  const structuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Movie",
+      "name": movie.name,
+      "alternateName": movie.origin_name,
+      "description": movie.content,
+      "image": [
+        movie.poster_url,
+        ...(movie.thumb_url ? [movie.thumb_url] : [])
+      ],
+      "url": url,
+      "datePublished": movie.year ? `${movie.year}-01-01` : undefined,
+      "inLanguage": movie.lang || "vi",
+      "genre": movie.category?.map(cat => cat.name) || [],
+      "actor": movie.actor?.map(actor => ({
+        "@type": "Person",
+        "name": actor
+      })) || [],
+      "director": movie.director?.map(director => ({
+        "@type": "Person",
+        "name": director
+      })) || [],
+      "countryOfOrigin": movie.country?.[0]?.name,
+      "duration": movie.time,
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.5",
+        "ratingCount": "1000",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "VND",
+        "availability": "https://schema.org/InStock"
+      }
     },
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "VND",
-      "availability": "https://schema.org/InStock"
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoObject",
+      "name": `Xem phim ${movie.name} HD`,
+      "description": movie.content || `Xem phim ${movie.name} HD miễn phí.`,
+      "thumbnailUrl": [
+        movie.thumb_url || movie.poster_url,
+        movie.poster_url
+      ],
+      "uploadDate": movie.year ? `${movie.year}-01-01T08:00:00+07:00` : new Date().toISOString(),
+      "contentUrl": url,
+      "embedUrl": url,
+      "publisher": {
+        "@type": "Organization",
+        "name": "Rạp Phim Chill",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://rapphimchill.pro/favicon.png"
+        }
+      }
     }
-  };
+  ];
 
   // Remove undefined fields
   const cleanStructuredData = JSON.parse(JSON.stringify(structuredData));

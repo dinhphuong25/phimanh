@@ -56,7 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // Movie routes - limit to recent movies for better performance
     const movieRoutes = newMovies.slice(0, 1000).map((movie: any) => ({
-      url: `${baseUrl}/watch?slug=${movie.slug}`,
+      url: `${baseUrl}/phim/${movie.slug}`,
       lastModified: movie.modified_time ? new Date(movie.modified_time) : new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.6,

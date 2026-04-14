@@ -11,6 +11,7 @@ import HydrationFix from "@/components/ui/hydration-fix";
 import { PWAInstaller, PerformanceMonitor } from "@/components/pwa-init";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import SecurityGuard from "@/components/ui/security-guard";
 
 // Chỉ load 1 font thay vì 3 — giảm 60% thời gian font download
 const inter = Inter({
@@ -132,6 +133,9 @@ export default function RootLayout({
             style={{ display: "none", visibility: "hidden" }}
           />
         </noscript>
+
+        {/* Cảnh vệ bảo mật Frontend (ẩn trong code) */}
+        <SecurityGuard />
 
         {/* Structured Data */}
         <WebsiteStructuredData url="https://rapphimchill.pro" />

@@ -42,9 +42,20 @@ export default function AdvancedSearchFilter({
     (key: string, value: any) => {
       const updated = { ...filters, [key]: value, page: 1 };
       setFilters(updated);
+      
+      const current = new URLSearchParams(Array.from(searchParams.entries()));
+      Object.entries(updated).forEach(([k, v]) => {
+        if (v !== undefined && v !== "") {
+          current.set(k, String(v));
+        } else {
+          current.delete(k);
+        }
+      });
+      
+      router.push(`?${current.toString()}`, { scroll: false });
       onFilterChange?.(updated);
     },
-    [filters, onFilterChange]
+    [filters, onFilterChange, router, searchParams]
   );
 
   const handleReset = () => {
@@ -58,6 +69,14 @@ export default function AdvancedSearchFilter({
       page: 1,
     };
     setFilters(reset);
+    
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    Object.keys(reset).forEach(k => current.delete(k));
+    
+    // Giữ lại query cũ nếu có
+    if (searchParams.get("query")) current.set("query", searchParams.get("query")!);
+    
+    router.push(`?${current.toString()}`, { scroll: false });
     onFilterChange?.(reset);
   };
 

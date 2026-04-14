@@ -101,6 +101,7 @@ export default class PhimApi {
         Referer: "https://rapphimchill.pro",
         "User-Agent": "phimanh-bot/2.0",
       },
+      next: { revalidate: 300 }, // Cache search queries for 5 mins
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();
@@ -114,6 +115,7 @@ export default class PhimApi {
         Referer: "https://rapphimchill.pro",
         "User-Agent": "phimanh-bot/2.0",
       },
+      next: { revalidate: 3600 }, // Cache category pages for 1 hour
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();
@@ -127,6 +129,7 @@ export default class PhimApi {
         Referer: "https://rapphimchill.pro",
         "User-Agent": "phimanh-bot/2.0",
       },
+      next: { revalidate: 3600 }, // Cache topic pages for 1 hour
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();
@@ -182,6 +185,7 @@ export default class PhimApi {
         Referer: "https://rapphimchill.pro",
         "User-Agent": "phimanh-bot/2.0",
       },
+      next: { revalidate: 900 }, // Cache filtered list for 15 mins
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();

@@ -19,8 +19,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import MovieRating from "@/components/ui/movie-rating";
-import { Heart } from "lucide-react";
+import { Heart, Play } from "lucide-react";
 import { getFavoriteMovies, toggleFavoriteMovie } from "@/lib/user-experience";
+import { cn } from "@/lib/utils";
 
 const EmbedPlayer = dynamic(() => import("../player/embed-player"), {
   ssr: false,
@@ -41,6 +42,7 @@ export default function Description({ movie, serverData }: any) {
     episode: number;
   } | null>(null);
   const [playerMode, setPlayerMode] = useState<'m3u8' | 'embed'>('m3u8');
+  const [isTheaterMode, setIsTheaterMode] = useState(false);
 
   const getEpisodeProgressKey = useCallback((serverIndex: number, episodeIndex: number) => {
     return `watchProgress_${movie.slug}_${serverIndex}_${episodeIndex}`;
@@ -239,11 +241,58 @@ export default function Description({ movie, serverData }: any) {
     };
   }, [currentEpisodeIndex, playerMode, serverData]);
 
+  const handleNextEpisode = useCallback(() => {
+    if (!serverData || !currentEpisodeIndex) return;
+
+    clearEpisodeProgress(currentEpisodeIndex.server, currentEpisodeIndex.episode);
+
+    const { server, episode } = currentEpisodeIndex;
+    const currentServer = serverData[server];
+    if (!currentServer) return;
+
+    let nextEpisodeIndex = episode + 1;
+    let nextServerIndex = server;
+
+    if (nextEpisodeIndex >= currentServer.server_data.length) {
+      nextServerIndex = server + 1;
+      nextEpisodeIndex = 0;
+      if (nextServerIndex >= serverData.length) return;
+    }
+
+    const nextServer = serverData[nextServerIndex];
+    if (!nextServer || nextEpisodeIndex >= nextServer.server_data.length) return;
+
+    const nextEpisode = nextServer.server_data[nextEpisodeIndex];
+    if (nextEpisode?.link_m3u8) {
+      setCurrentEpisodeUrl(nextEpisode.link_m3u8);
+      setCurrentEpisodeIndex({
+        server: nextServerIndex,
+        episode: nextEpisodeIndex,
+      });
+    }
+  }, [serverData, currentEpisodeIndex, clearEpisodeProgress]);
+
+  const hasNextEpisode = () => {
+    if (!serverData || !currentEpisodeIndex) return false;
+    const { server, episode } = currentEpisodeIndex;
+    const currentServer = serverData[server];
+    if (!currentServer) return false;
+    
+    if (episode + 1 < currentServer.server_data.length) return true;
+    if (server + 1 < serverData.length && serverData[server + 1]?.server_data?.length > 0) return true;
+    return false;
+  };
+
   return (
-    <div className="w-full flex-col max-w-[1450px] mx-auto py-4 md:py-6 px-3 sm:px-4 lg:px-6 gap-6 md:gap-8 flex z-10 relative overflow-x-hidden">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 items-start z-20">
-        <Card className="lg:col-span-8 xl:col-span-9 rounded-xl lg:rounded-2xl border-0 overflow-hidden bg-black/90 shadow-2xl ring-1 ring-white/10 w-full aspect-video z-50">
-          <CardContent className="p-0 h-full w-full">
+    <div className={cn("w-full flex-col max-w-[1450px] mx-auto py-4 md:py-6 px-3 sm:px-4 lg:px-6 gap-6 md:gap-8 flex z-10 relative", isTheaterMode ? "" : "overflow-x-hidden")}>
+      {/* Theater Mode Fixed Background Layer */}
+      {isTheaterMode && (
+        <div className="fixed inset-0 z-[9990] bg-black/95 backdrop-blur-sm pointer-events-none" />
+      )}
+
+      <div className={cn("grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 items-start z-20", isTheaterMode ? "z-[9995]" : "")}>
+        <Card className={cn("lg:col-span-8 xl:col-span-9 border-0 overflow-hidden shadow-2xl ring-1 ring-white/10 w-full aspect-video", isTheaterMode ? "fixed inset-0 z-[10000] !aspect-auto bg-transparent flex flex-col items-center justify-center p-0 lg:p-12 !h-screen !w-screen !rounded-none min-h-[0px] h-[100dvh]" : "rounded-xl lg:rounded-2xl bg-black/90 z-50")}>
+          <CardContent className={cn(isTheaterMode ? "w-full min-h-[50vh] max-h-[100dvh] h-full lg:max-h-full xl:max-w-7xl" : "p-0 h-full w-full")}>
             {playerMode === 'm3u8' ? (
               <VideoPlayer
                 videoUrl={currentEpisodeUrl}
@@ -260,34 +309,14 @@ export default function Description({ movie, serverData }: any) {
                     }
                   }
                 }}
+                hasNextEpisode={hasNextEpisode()}
+                onNextEpisode={handleNextEpisode}
+                isTheaterMode={isTheaterMode}
+                onToggleTheaterMode={() => setIsTheaterMode(!isTheaterMode)}
                 onEnded={() => {
-                  if (!serverData || !currentEpisodeIndex) return;
-
-                  clearEpisodeProgress(currentEpisodeIndex.server, currentEpisodeIndex.episode);
-
-                  const { server, episode } = currentEpisodeIndex;
-                  const currentServer = serverData[server];
-                  if (!currentServer) return;
-
-                  let nextEpisodeIndex = episode + 1;
-                  let nextServerIndex = server;
-
-                  if (nextEpisodeIndex >= currentServer.server_data.length) {
-                    nextServerIndex = server + 1;
-                    nextEpisodeIndex = 0;
-                    if (nextServerIndex >= serverData.length) return;
-                  }
-
-                  const nextServer = serverData[nextServerIndex];
-                  if (!nextServer || nextEpisodeIndex >= nextServer.server_data.length) return;
-
-                  const nextEpisode = nextServer.server_data[nextEpisodeIndex];
-                  if (nextEpisode?.link_m3u8) {
-                    setCurrentEpisodeUrl(nextEpisode.link_m3u8);
-                    setCurrentEpisodeIndex({
-                      server: nextServerIndex,
-                      episode: nextEpisodeIndex,
-                    });
+                  clearEpisodeProgress(currentEpisodeIndex?.server || 0, currentEpisodeIndex?.episode || 0);
+                  if (!hasNextEpisode()) {
+                    // Video ended and no next episode
                   }
                 }}
               />
@@ -363,6 +392,18 @@ export default function Description({ movie, serverData }: any) {
                   {movie.content || "Chưa có thông tin nội dung phim."}
                 </p>
                 <div className="flex flex-wrap gap-3">
+                  {resumeTime > 5 && (
+                    <Button
+                      onClick={() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        // Player is playing anyway due to autoplay, but we can trigger a state if needed
+                      }}
+                      className="bg-primary/90 hover:bg-primary text-black font-semibold rounded-lg px-5 shadow-lg shadow-primary/20 ring-1 ring-primary/50"
+                    >
+                      <Play className="w-4 h-4 mr-2" fill="currentColor" />
+                      Tiếp tục xem ({Math.floor(resumeTime / 60)}:{(resumeTime % 60).toFixed(0).padStart(2, '0')})
+                    </Button>
+                  )}
                   {movie.trailer_url && (
                     <Button
                       onClick={() => setShowTrailer(true)}
@@ -391,7 +432,7 @@ export default function Description({ movie, serverData }: any) {
                 </div>
                 <div>
                   <p className="text-[11px] text-white/50 uppercase tracking-wider">Diễn viên</p>
-                  <p className="text-sm text-white/80 mt-1 break-words max-h-24 overflow-y-auto pr-1">{movie.actor.join(", ") || "Chưa cập nhật"}</p>
+                  <p className="text-sm text-white/80 mt-1 break-words pr-1">{movie.actor.join(", ") || "Chưa cập nhật"}</p>
                 </div>
                 <div>
                   <p className="text-[11px] text-white/50 uppercase tracking-wider mb-2">Thể loại</p>

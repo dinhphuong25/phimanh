@@ -8,13 +8,21 @@ import { ScrollToTopFAB } from "@/components/ui/material-fab";
 
 type SearchPageProps = {
   searchParams: Promise<{
-    index: number | 1;
-    query: string;
+    index?: string;
+    query?: string;
+    category?: string;
+    country?: string;
+    typeList?: string;
+    sortField?: string;
+    sortType?: string;
+    year?: string;
   }>;
 };
 export async function generateMetadata({ searchParams }: SearchPageProps) {
-  const { index, query } = await searchParams;
-  const postTitle = `Kết quả cho "${query}"`;
+  const params = await searchParams;
+  const index = params.index ? parseInt(params.index) : 1;
+  const query = params.query;
+  const postTitle = query ? `Kết quả cho "${query}"` : "Tìm kiếm Nâng cao";
 
   const titleText =
     `${postTitle} | Rạp Phim Chill` + (index > 1 ? " - Trang " + index : "");
@@ -22,17 +30,40 @@ export async function generateMetadata({ searchParams }: SearchPageProps) {
     title: titleText,
     description:
       "Khám phá kho tàng phim ảnh chất lượng cao với hình ảnh và âm thanh hoàn hảo. Trải nghiệm những tác phẩm điện ảnh kinh điển với chất lượng tuyệt đỉnh.",
-    keywords: `${query}, phim ảnh, phim chất lượng cao, phim, phim hd, phim kinh điển, phim viễn tưởng, phim kinh dị, phim bộ, anime`,
+    keywords: `${query || "phim ảnh"}, phim ảnh, phim chất lượng cao, phim hd, phim kinh điển`,
   };
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const { index, query } = await searchParams;
+  const params = await searchParams;
+  const index = params.index ? parseInt(params.index) : 1;
+  const query = params.query;
+  const { category, country, typeList, year, sortField, sortType } = params;
+  
   const api = new PhimApi();
   const topics = api.listTopics();
   const categories = await api.listCategories();
   const countries = await api.listCountries();
-  const [movies, pageInfo] = await api.search(query, index);
+  
+  let movies, pageInfo;
+
+  if (query) {
+    [movies, pageInfo] = await api.search(query, index);
+  } else if (category || country || typeList || year) {
+    [movies, pageInfo] = await api.getFilteredList({
+      typeList: typeList || "phim-bo",
+      page: index,
+      category,
+      country,
+      year: year ? parseInt(year) : undefined,
+      sortField: sortField || "modified.time",
+      sortType: sortType || "desc",
+      limit: 20
+    });
+  } else {
+    // Default fallback
+    [movies, pageInfo] = await api.newAdding(index);
+  }
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -48,13 +79,19 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <div className="flex items-center gap-3 mb-2">
             <div className="w-1 h-8 bg-primary rounded-full" />
             <h1 className="text-2xl md:text-3xl font-bold text-white">
-              Kết quả tìm kiếm
+               {query ? "Kết quả tìm kiếm" : "Lọc nâng cao"}
             </h1>
           </div>
-          <p className="text-gray-400 ml-4">
-            Từ khóa: <span className="text-primary font-medium">"{query}"</span>
-            {movies?.length > 0 && (
-              <span className="ml-2">• Tìm thấy {movies.length} kết quả</span>
+          <p className="text-gray-400 ml-4 flex flex-wrap gap-2 items-center">
+            {query && <span>Từ khóa: <span className="text-primary font-medium">"{query}"</span></span>}
+            {category && <span>Thể loại: <span className="text-pink-400 font-medium">{category}</span></span>}
+            {country && <span>Quốc gia: <span className="text-green-400 font-medium">{country}</span></span>}
+            {year && <span>Năm: <span className="text-cyan-400 font-medium">{year}</span></span>}
+            
+            {movies?.length > 0 ? (
+              <span className="ml-2 bg-white/10 px-2 py-0.5 rounded text-sm text-white/80">• Tìm thấy {movies.length} kết quả</span>
+            ) : (
+              <span className="ml-2 text-sm text-red-400">• Không có kết quả</span>
             )}
           </p>
         </div>

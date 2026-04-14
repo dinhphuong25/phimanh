@@ -49,47 +49,12 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['@mui/material', '@mui/icons-material', 'lucide-react'],
   },
 
-  // Turbopack configuration for Next.js 16
-  turbopack: {},
-
-  // Webpack optimizations
-  webpack: (config: any, { dev, isServer }: { dev: boolean; isServer: boolean }) => {
-    // Bundle analyzer in development
-    if (dev && process.env.ANALYZE === 'true') {
-      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-      config.plugins.push(
-        new BundleAnalyzerPlugin({
-          analyzerMode: 'server',
-          openAnalyzer: true,
-        })
-      );
-    }
-
-    // Optimize chunks for production (client-side only)
-    if (!dev && !isServer) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            mui: {
-              test: /[\\/]node_modules[\\/]@mui[\\/]/,
-              name: 'mui',
-              chunks: 'all',
-              priority: 10,
-            },
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-              priority: 5,
-            },
-          },
-        },
-      };
-    }
-
-    return config;
+  // Turbopack configuration (dev) - Webpack config below applies to production build only
+  turbopack: {
+    resolveAlias: {
+      // Turbopack handles chunk splitting automatically
+      // This config acknowledges webpack is for prod builds only
+    },
   },
 
   // Enhanced Security headers + Performance Caching

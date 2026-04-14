@@ -1,11 +1,13 @@
 "use client";
 
 import EnhancedButton from "@/components/ui/enhanced-button";
-import SearchPanel from "@/components/search/search-autocomplete";
+import dynamic from "next/dynamic";
 import { Suspense, useRef, useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import Sidebar from "@/components/sidebar";
 import Link from "next/link";
+
+const SearchPanel = dynamic(() => import("@/components/search/search-autocomplete"), { ssr: false });
+const Sidebar = dynamic(() => import("@/components/sidebar"), { ssr: false });
 import { useLoading } from "@/components/ui/loading-context";
 import { Search, Menu, Moon, Sun } from "lucide-react";
 import { throttle } from "@/lib/api-cache";

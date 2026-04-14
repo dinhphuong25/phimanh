@@ -41,6 +41,10 @@ interface VideoPlayerProps {
   onEnded?: () => void;
   onSwitchToEmbed?: () => void;
   onProgress?: (currentTime: number, duration: number) => void;
+  hasNextEpisode?: boolean;
+  onNextEpisode?: () => void;
+  isTheaterMode?: boolean;
+  onToggleTheaterMode?: () => void;
 }
 
 const formatTime = (seconds: number) => {
@@ -63,6 +67,10 @@ const VideoPlayer = ({
   onEnded,
   onSwitchToEmbed,
   onProgress,
+  hasNextEpisode,
+  onNextEpisode,
+  isTheaterMode,
+  onToggleTheaterMode,
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -85,6 +93,10 @@ const VideoPlayer = ({
   const [qualities, setQualities] = useState<{ height: number, level: number }[]>([]);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
+
+  // Next episode countdown state
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Double tap state
   const [skipAnimation, setSkipAnimation] = useState<{ side: 'left' | 'right', id: number } | null>(null);
@@ -114,6 +126,8 @@ const VideoPlayer = ({
 
     setError(null);
     setIsLoading(true);
+    setCountdown(null);
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     didSeekInitialTimeRef.current = false;
     lastProgressSecondRef.current = -1;
 
@@ -311,7 +325,22 @@ const VideoPlayer = ({
     const onPlaying = () => setIsLoading(false);
     const onEndedEvent = () => {
       setIsPlaying(false);
-      onEnded?.();
+      
+      if (hasNextEpisode && onNextEpisode) {
+        setCountdown(5);
+        countdownIntervalRef.current = setInterval(() => {
+          setCountdown((prev) => {
+            if (prev === null || prev <= 1) {
+              if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+              onNextEpisode();
+              return null;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } else {
+        onEnded?.();
+      }
     };
 
     video.addEventListener('play', onPlay);
@@ -330,17 +359,18 @@ const VideoPlayer = ({
       video.removeEventListener('waiting', onWaiting);
       video.removeEventListener('playing', onPlaying);
       video.removeEventListener('ended', onEndedEvent);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     };
-  }, [onEnded, onProgress]);
+  }, [hasNextEpisode, onNextEpisode, onEnded, onProgress]);
 
   // Controls Visibility
   const showControlsHandler = useCallback(() => {
     setShowControls(true);
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
-    if (isPlaying) {
+    if (isPlaying && countdown === null) {
       controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
     }
-  }, [isPlaying]);
+  }, [isPlaying, countdown]);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -622,6 +652,7 @@ const VideoPlayer = ({
         }
       }}
       onMouseLeave={() => isPlaying && setShowControls(false)}
+      onContextMenu={(e) => e.preventDefault()}
     >
       {/* Video Element - Optimized for fast loading */}
       <video
@@ -696,6 +727,48 @@ const VideoPlayer = ({
         </div>
       )}
 
+      {/* Next Episode Countdown Overlay */}
+      {countdown !== null && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-30 backdrop-blur-sm pointer-events-auto">
+          <div className="text-center p-6 animate-in fade-in zoom-in duration-300">
+            <h3 className="text-2xl font-bold text-white mb-2">Tập tiếp theo</h3>
+            <p className="text-white/70 mb-6">Tự động chuyển tập sau {countdown} giây</p>
+            
+            <div className="flex gap-4 items-center justify-center">
+              <Button
+                variant="outline"
+                className="bg-transparent border-white/20 text-white hover:bg-white/10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCountdown(null);
+                  if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+                }}
+              >
+                Hủy bỏ
+              </Button>
+              <Button
+                className="bg-primary text-black hover:bg-primary/90 min-w-32"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCountdown(null);
+                  if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+                  onNextEpisode?.();
+                }}
+              >
+                Chuyển ngay <SkipForward className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+            
+            <div className="mt-8 relative w-48 h-1 bg-white/20 rounded-full mx-auto overflow-hidden">
+              <div 
+                className="absolute top-0 left-0 h-full bg-primary transition-all duration-1000 ease-linear rounded-full"
+                style={{ width: `${(countdown / 5) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Error Overlay */}
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/90 via-black/70 to-black/90 z-30 backdrop-blur-sm">
@@ -743,6 +816,7 @@ const VideoPlayer = ({
           size="icon"
           className="bg-black/40 hover:bg-black/60 text-white rounded-full w-10 h-10 backdrop-blur-sm"
           onClick={handleBack}
+          aria-label="Quay lại"
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -764,6 +838,7 @@ const VideoPlayer = ({
           size="icon"
           onClick={(e) => { e.stopPropagation(); skip(-10); }}
           className="text-white hover:bg-transparent hover:text-white/80 w-24 h-24 rounded-full pointer-events-auto"
+          aria-label="Lùi 10 giây"
         >
           <SkipBack className="w-12 h-12" />
         </Button>
@@ -773,6 +848,7 @@ const VideoPlayer = ({
           size="icon"
           onClick={(e) => { e.stopPropagation(); togglePlay(); }}
           className="text-white hover:bg-transparent hover:text-white/80 w-32 h-32 rounded-full pointer-events-auto"
+          aria-label={isPlaying ? "Tạm dừng" : "Phát"}
         >
           {isPlaying ? <Pause className="w-16 h-16 fill-white" /> : <Play className="w-16 h-16 fill-white ml-2" />}
         </Button>
@@ -782,6 +858,7 @@ const VideoPlayer = ({
           size="icon"
           onClick={(e) => { e.stopPropagation(); skip(10); }}
           className="text-white hover:bg-transparent hover:text-white/80 w-24 h-24 rounded-full pointer-events-auto"
+          aria-label="Tiến 10 giây"
         >
           <SkipForward className="w-12 h-12" />
         </Button>
@@ -880,6 +957,7 @@ const VideoPlayer = ({
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
+
 
             <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-white hover:bg-white/20" aria-label={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>
               {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}

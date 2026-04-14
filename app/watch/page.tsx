@@ -21,6 +21,7 @@ export async function generateMetadata({ searchParams }: any) {
     const movie = data?.movie;
     if (!movie?.name) return { title: "Xem phim | Rạp Phim Chill" };
     const watchUrl = `https://rapphimchill.pro/watch?slug=${slug}`;
+    const canonicalUrl = `https://rapphimchill.pro/phim/${slug}`;
     return {
       title: `${movie.name} - Xem phim HD chất lượng cao | Rạp Phim Chill`,
       description: movie.content
@@ -36,7 +37,7 @@ export async function generateMetadata({ searchParams }: any) {
         title: `${movie.name} - Xem phim HD`,
         images: [movie.thumb_url || movie.poster_url].filter(Boolean),
       },
-      alternates: { canonical: watchUrl },
+      alternates: { canonical: canonicalUrl },
     };
   } catch {
     return { title: "Xem phim | Rạp Phim Chill" };
