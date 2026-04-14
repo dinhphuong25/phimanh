@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const res = await fetch(parsedUrl.toString(), {
-      // Next.js Data Cache: revalidate after 5 min, serve stale for 10 more min
-      next: { revalidate: 300 },
+      // Next.js Data Cache: revalidate after 1 hour
+      next: { revalidate: 3600 },
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; PhimanhBot/1.0)",
         Accept: "application/json",

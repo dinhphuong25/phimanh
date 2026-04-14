@@ -15,7 +15,7 @@ const getMovie = unstable_cache(
     return api.get(slug);
   },
   ["phim-detail"],
-  { revalidate: 300 }
+  { revalidate: 3600 } // 1 hour caching for movie detail
 );
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {

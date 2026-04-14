@@ -11,7 +11,7 @@ const getMovieData = unstable_cache(
     return api.get(slug);
   },
   ["watch-movie-data"],
-  { revalidate: 300 }
+  { revalidate: 3600 }
 );
 
 export async function generateMetadata({ searchParams }: any) {

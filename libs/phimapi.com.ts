@@ -101,7 +101,7 @@ export default class PhimApi {
         Referer: "https://rapphimchill.pro",
         "User-Agent": "phimanh-bot/2.0",
       },
-      next: { revalidate: 300 }, // Cache search queries for 5 mins
+      next: { revalidate: 3600 }, // Cache search queries for 1 hour
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();
@@ -143,7 +143,7 @@ export default class PhimApi {
         Referer: "https://rapphimchill.pro",
         "User-Agent": "phimanh-bot/2.0",
       },
-      next: { revalidate: 300 }, // Cache topic items (trang chủ) 5 phút
+      next: { revalidate: 3600 }, // Cache topic items (trang chủ) 1 tiếng
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();
