@@ -68,8 +68,8 @@ export async function generateMetadata({ searchParams }: HomeProps) {
 }
 
 export default async function Home({ searchParams }: HomeProps) {
-  // Cố tình tạo độ trễ 3 giây để hiển thị màn hình Loading theo yêu cầu
-  await new Promise((resolve) => setTimeout(resolve, 3000));
+  // Cố tình tạo độ trễ 2 giây để hiển thị màn hình Loading theo yêu cầu
+  await new Promise((resolve) => setTimeout(resolve, 2000));
 
   const params = await searchParams;
   const index = Number(params.index) || 1;
