@@ -317,23 +317,7 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
                 </div>
                 <p className="text-white/30 text-sm">Không tìm thấy kết quả cho <span className="text-white/50 font-semibold">"{query}"</span></p>
               </div>
-            ) : (
-              /* Trending */
-              <div className="px-5 py-4">
-                <p className="text-[10px] font-bold text-white/25 uppercase tracking-widest mb-3">🔥 Tìm kiếm phổ biến</p>
-                <div className="flex flex-wrap gap-2">
-                  {TRENDING_SEARCHES.map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => { setQuery(t); fetchSuggestions(t); }}
-                      className="px-3 py-1.5 text-xs font-medium text-white/60 bg-white/5 hover:bg-primary/15 hover:text-primary rounded-lg border border-white/8 hover:border-primary/30 transition-all duration-200"
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            ) : null}
 
             {/* Footer hint */}
             {suggestions.length > 0 && (
