@@ -31,7 +31,7 @@ const LazyImage = memo(function LazyImage({
           observer.disconnect();
         }
       },
-      { rootMargin: "100px", threshold: 0.01 }
+      { rootMargin: "800px", threshold: 0.01 }
     );
 
     if (imgRef.current) {
@@ -44,9 +44,9 @@ const LazyImage = memo(function LazyImage({
   const imageSrc = src?.startsWith("http") ? src : `https://phimimg.com/${src}`;
 
   return (
-    <div ref={imgRef} className={`relative ${className}`} style={{ contentVisibility: "auto", containIntrinsicSize: "auto 300px" }}>
+    <div ref={imgRef} className={`relative ${className}`} style={{ contentVisibility: "auto", containIntrinsicSize: "auto 400px" }}>
       {!isLoaded && (
-        <div className="absolute inset-0 bg-gray-800 animate-pulse" />
+        <div className="absolute inset-0 bg-gray-900/50 animate-pulse backdrop-blur-md" />
       )}
 
       {isInView && (
@@ -56,6 +56,7 @@ const LazyImage = memo(function LazyImage({
           fill
           unoptimized
           decoding="async"
+          loading={priority ? "eager" : "lazy"}
           sizes="(max-width: 480px) 160px, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
           priority={priority}
           onLoad={() => setIsLoaded(true)}
