@@ -11,7 +11,7 @@ export function SplashScreen() {
     const timer = setTimeout(() => {
       setIsFading(true);
       setTimeout(() => setShow(false), 500); // Wait for fade out animation
-    }, 3500); // 3.5s solid + 0.5s fade out = 4s total
+    }, 2000); // 2s solid + 0.5s fade out = 2.5s total
 
     return () => clearTimeout(timer);
   }, []);
