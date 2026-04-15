@@ -59,7 +59,16 @@ export default {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+        keyframes: {
+            "progress-shrink": {
+              "0%": { transform: "scaleX(1)" },
+              "100%": { transform: "scaleX(0)" }
+            }
+        },
+        animation: {
+            "progress-shrink": "progress-shrink 8s linear forwards"
+        }
   	}
   },
   plugins: [require("tailwindcss-animate")],

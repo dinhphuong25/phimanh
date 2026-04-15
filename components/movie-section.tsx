@@ -56,7 +56,10 @@ export default function MovieSection({
       </div>
 
       {/* Horizontal Scroll Layout for Desktop, Grid for Mobile */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-row gap-3 sm:gap-4 md:overflow-x-auto md:overflow-y-hidden md:snap-x md:snap-mandatory pb-4 md:scrollbar-thin md:scrollbar-thumb-black/20 md:scrollbar-track-transparent">
+      <div 
+        className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-row gap-3 sm:gap-4 md:overflow-x-auto md:overflow-y-hidden md:snap-x md:snap-mandatory pb-2 sm:pb-4 scrollbar-hide"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
         {filteredMovies && filteredMovies.length > 0 ? (
           filteredMovies.slice(0, 15).map((movie: any, index: number) => {
             return (

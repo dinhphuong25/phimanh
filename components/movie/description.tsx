@@ -19,7 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import MovieRating from "@/components/ui/movie-rating";
-import { Heart, Play } from "lucide-react";
+import { Heart, Play, Lightbulb } from "lucide-react";
 import { getFavoriteMovies, toggleFavoriteMovie } from "@/lib/user-experience";
 import { cn } from "@/lib/utils";
 
@@ -286,14 +286,23 @@ export default function Description({ movie, serverData }: any) {
 
   return (
     <div className={cn("w-full flex-col max-w-[1450px] mx-auto py-4 md:py-6 px-3 sm:px-4 lg:px-6 gap-6 md:gap-8 flex z-10 relative", isTheaterMode ? "" : "overflow-x-hidden")}>
-      {/* Theater Mode Fixed Background Layer */}
+      {/* Theater Mode Overlay (Tắt đèn) */}
       {isTheaterMode && (
-        <div className="fixed inset-0 z-[9990] bg-black/95 backdrop-blur-sm pointer-events-none" />
+        <div 
+          className="fixed inset-0 bg-black/95 z-[40] transition-opacity duration-500 ease-in-out"
+          onClick={() => setIsTheaterMode(false)}
+        />
       )}
 
-      <div className={cn("grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 items-start z-20", isTheaterMode ? "z-[9995]" : "")}>
-        <Card className={cn("lg:col-span-8 xl:col-span-9 border-0 overflow-hidden shadow-2xl ring-1 ring-white/10 w-full aspect-video", isTheaterMode ? "fixed inset-0 z-[10000] !aspect-auto bg-transparent flex flex-col items-center justify-center p-0 lg:p-12 !h-screen !w-screen !rounded-none min-h-[0px] h-[100dvh]" : "rounded-xl lg:rounded-2xl bg-black/90 z-50")}>
-          <CardContent className={cn(isTheaterMode ? "w-full min-h-[50vh] max-h-[100dvh] h-full lg:max-h-full xl:max-w-7xl" : "p-0 h-full w-full")}>
+      <div className={cn(
+        "grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 items-start z-20 transition-all duration-500", 
+        isTheaterMode ? "fixed top-[5vh] left-1/2 -translate-x-1/2 w-full max-w-[1500px] px-4 z-[50]" : ""
+      )}>
+        <Card className={cn(
+          "lg:col-span-8 xl:col-span-9 border-0 overflow-hidden shadow-2xl ring-1 ring-white/10 w-full aspect-video transition-all duration-500 ease-in-out", 
+          isTheaterMode ? "bg-black scale-[1.02] shadow-[0_0_50px_rgba(0,0,0,0.8)] ring-primary/20 lg:col-span-12 xl:col-span-12" : "rounded-xl lg:rounded-2xl bg-black/90"
+        )}>
+          <CardContent className="p-0 h-full w-full">
             {playerMode === 'm3u8' ? (
               <VideoPlayer
                 videoUrl={currentEpisodeUrl}

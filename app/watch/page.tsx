@@ -83,7 +83,7 @@ export default async function WatchPage({ searchParams }: any) {
   }));
 
   return (
-    <div className="dark bg-black min-h-screen text-white">
+    <div className="dark bg-black min-h-screen text-white hide-horizontal-scroll">
       {/* Structured Data */}
       <MovieStructuredData
         movie={movie}

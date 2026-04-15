@@ -147,27 +147,27 @@ const VideoPlayer = ({
           enableWorker: true,              // Use web worker for better performance
           lowLatencyMode: true,            // Enable low latency streaming
           
-          // Minimal initial buffer for instant playback
-          maxBufferLength: 10,             // Reduced from 20 for faster startup
-          maxBufferSize: 60 * 1000 * 1000, // 60MB max buffer
-          maxBufferHole: 0.5,              // Tolerate small gaps for faster seeking
+          // Allow aggressive buffering for high quality video 
+          maxBufferLength: 30,             // Tăng buffer lên 30s để gánh chất lượng cao
+          maxBufferSize: 120 * 1000 * 1000, // Tăng gấp đôi lên 120MB buffer chống lag cho độ phân giải 1080p/4K
+          maxBufferHole: 0.1,              // Giảm lỗ hổng đệm để video mượt mượt
           
           // === AGGRESSIVE QUALITY SELECTION ===
           startLevel: -1,                  // Auto-detect best quality immediately
-          abrEwmaDefaultEstimate: 20000000, // Assume 20 Mbps - favor high quality
-          abrBandWidthFactor: 0.9,         // Very conservative downgrades (keep quality)
-          abrBandWidthUpFactor: 0.5,       // Aggressive upgrades to best quality
-          abrEwmaFastLive: 2,              // Fast adaptation
-          abrEwmaSlowLive: 6,              // Quick response to bandwidth changes
+          abrEwmaDefaultEstimate: 50000000, // Assume 50 Mbps - favor maximum quality immediately
+          abrBandWidthFactor: 0.95,        // Very conservative downgrades (keep quality as high as possible)
+          abrBandWidthUpFactor: 0.4,       // Aggressive upgrades to best quality
+          abrEwmaFastLive: 1,              // Extremely Fast adaptation to higher quality
+          abrEwmaSlowLive: 3,              // Quick response to bandwidth changes
           
           // === MAX QUALITY SETTINGS ===
           capLevelToPlayerSize: false,     // Allow 4K even on smaller screens
-          maxLoadingDelay: 4,              // Reduce wait time for best quality
-          minAutoBitrate: 500000,          // Minimum 500 Kbps quality
+          maxLoadingDelay: 2,              // Reduce wait time for best quality
+          minAutoBitrate: 1000000,         // Minimum 1 Mbps (720p/1080p fallback)
           
           // === SMOOTH SEEKING & LOADING ===
           startFragPrefetch: true,         // Preload next fragment immediately
-          maxFragLookUpTolerance: 0.1,     // Better seeking precision
+          maxFragLookUpTolerance: 0.2,     // Better seeking precision
           progressive: true,               // Progressive download for faster start
           
           // === BUFFER OPTIMIZATION ===
@@ -202,6 +202,12 @@ const VideoPlayer = ({
             level: index
           })).sort((a, b) => b.height - a.height);
           setQualities(availableQualities);
+          
+          // Ưu tiên ép load phân giải cao nhất mặc định (Highest quality)
+          if (availableQualities.length > 0) {
+            hls.nextLevel = availableQualities[0].level;
+            hls.currentLevel = availableQualities[0].level;
+          }
 
           if (autoplay) {
             video.play().catch((e) => {
@@ -327,7 +333,7 @@ const VideoPlayer = ({
       setIsPlaying(false);
       
       if (hasNextEpisode && onNextEpisode) {
-        setCountdown(5);
+        setCountdown(5); // Auto-play sau 5s
         countdownIntervalRef.current = setInterval(() => {
           setCountdown((prev) => {
             if (prev === null || prev <= 1) {
@@ -729,15 +735,31 @@ const VideoPlayer = ({
 
       {/* Next Episode Countdown Overlay */}
       {countdown !== null && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-30 backdrop-blur-sm pointer-events-auto">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-[60] backdrop-blur-md pointer-events-auto">
           <div className="text-center p-6 animate-in fade-in zoom-in duration-300">
-            <h3 className="text-2xl font-bold text-white mb-2">Tập tiếp theo</h3>
-            <p className="text-white/70 mb-6">Tự động chuyển tập sau {countdown} giây</p>
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2 shadow-black drop-shadow-lg">Sắp phát tập tiếp theo</h3>
+            <p className="text-white/80 mb-8 sm:text-lg">Tự động chuyển tập sau {countdown} giây</p>
             
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-[6px] border-zinc-800 flex items-center justify-center mx-auto relative group mb-8">
+              <svg className="absolute inset-0 w-full h-full -rotate-90">
+                <circle
+                  cx="50%"
+                  cy="50%"
+                  r="calc(50% - 3px)"
+                  className="fill-transparent stroke-primary transition-all duration-1000 ease-linear"
+                  strokeWidth="6"
+                  strokeDasharray="100 100"
+                  strokeDashoffset={100 - (100 * (countdown / 5))} 
+                  pathLength="100"
+                />
+              </svg>
+              <span className="text-4xl sm:text-5xl font-black text-primary animate-pulse">{countdown}</span>
+            </div>
+
             <div className="flex gap-4 items-center justify-center">
               <Button
                 variant="outline"
-                className="bg-transparent border-white/20 text-white hover:bg-white/10"
+                className="bg-zinc-800/80 border-white/10 text-white hover:bg-zinc-700/80 rounded-full px-6"
                 onClick={(e) => {
                   e.stopPropagation();
                   setCountdown(null);
@@ -747,7 +769,7 @@ const VideoPlayer = ({
                 Hủy bỏ
               </Button>
               <Button
-                className="bg-primary text-black hover:bg-primary/90 min-w-32"
+                className="bg-primary text-black hover:bg-primary/90 min-w-32 rounded-full font-bold px-6 shadow-lg shadow-primary/20"
                 onClick={(e) => {
                   e.stopPropagation();
                   setCountdown(null);
@@ -757,13 +779,6 @@ const VideoPlayer = ({
               >
                 Chuyển ngay <SkipForward className="w-4 h-4 ml-2" />
               </Button>
-            </div>
-            
-            <div className="mt-8 relative w-48 h-1 bg-white/20 rounded-full mx-auto overflow-hidden">
-              <div 
-                className="absolute top-0 left-0 h-full bg-primary transition-all duration-1000 ease-linear rounded-full"
-                style={{ width: `${(countdown / 5) * 100}%` }}
-              />
             </div>
           </div>
         </div>
@@ -880,11 +895,6 @@ const VideoPlayer = ({
               step={1}
               onValueChange={handleSeek}
               className="z-20 py-4" // Add padding to make hit area larger
-            />
-            {/* Buffered Bar */}
-            <div
-              className="absolute top-1/2 -translate-y-1/2 left-0 h-1 bg-white/30 rounded-full pointer-events-none"
-              style={{ width: `${(buffered / duration) * 100}%` }}
             />
           </div>
         </div>

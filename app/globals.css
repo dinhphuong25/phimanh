@@ -130,12 +130,20 @@
 }
 
 @layer utilities {
+  /* Force hide scrollbars completely to override browser defaults */
   .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
   }
   .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* Hide horizontal scrollbar on page */
+  .hide-horizontal-scroll {
+    overflow-x: hidden !important;
   }
 }
 
@@ -143,6 +151,23 @@
 @layer base {
   * {
     @apply border-border;
+  }
+
+  /* Custom Global Scrollbar cho toàn bộ website */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(0 0% 20%);
+    border-radius: 50px;
+    border: 2px solid hsl(var(--background));
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary));
   }
 
   body {
@@ -153,6 +178,14 @@
   html {
     font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
     scroll-behavior: smooth;
+    /* Dành cho Firefox */
+    scrollbar-color: hsl(0 0% 30%) hsl(var(--background));
+    scrollbar-width: thin;
+  }
+
+  /* Hide horizontal scrollbar globally */
+  html {
+    overflow-x: hidden;
   }
 
   /* Hide browser extension attributes to prevent hydration mismatch */
