@@ -112,10 +112,11 @@ export default function Description({ movie, serverData }: any) {
     Cookies.set("recentlyWatched", JSON.stringify(updated), { expires: 30 });
   }, [movie.slug]);
 
-  // Auto-load last played episode or first episode on component mount, prioritizing "Thuyết Minh" server
+  // Auto-load last played episode or first episode on component mount, prioritizing "Vietsub" server
   useEffect(() => {
     const savedEpisode = localStorage.getItem(`lastEpisode_${movie.slug}`);
     const savedIndex = localStorage.getItem(`lastEpisodeIndex_${movie.slug}`);
+    
     if (savedEpisode && savedIndex) {
       setCurrentEpisodeUrl(savedEpisode);
       setCurrentEpisodeIndex(JSON.parse(savedIndex));
@@ -131,17 +132,17 @@ export default function Description({ movie, serverData }: any) {
 
       const defaultServer = serverData[defaultServerIndex];
       if (defaultServer?.server_data?.length > 0) {
-        const firstEpisode = defaultServer.server_data[0];
+        const firstEpisode = defaultServer.server_data[0]; // Tập đầu tiên
+        
+        setCurrentEpisodeIndex({ server: defaultServerIndex, episode: 0 });
         if (playerMode === 'm3u8' && firstEpisode?.link_m3u8) {
           setCurrentEpisodeUrl(firstEpisode.link_m3u8);
-          setCurrentEpisodeIndex({ server: defaultServerIndex, episode: 0 });
-        } else if (playerMode === 'embed' && firstEpisode?.link_embed) {
+        } else if (firstEpisode?.link_embed) {
           setCurrentEpisodeUrl(firstEpisode.link_embed);
-          setCurrentEpisodeIndex({ server: defaultServerIndex, episode: 0 });
         }
       }
     }
-  }, [serverData, movie.slug]);
+  }, [serverData, movie.slug, playerMode]);
 
   // Save current episode to localStorage when it changes
   useEffect(() => {

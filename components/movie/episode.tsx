@@ -148,40 +148,52 @@ export default function Episode({
         {/* Customized scrollbar directly inside Tailwind */}
         <div className="max-h-[320px] overflow-y-auto overflow-x-hidden pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/20 hover:[&::-webkit-scrollbar-thumb]:bg-white/30 [&::-webkit-scrollbar-thumb]:rounded-full">
           <div className="grid grid-cols-2 gap-2 w-full">
-            {currentServer?.server_data?.length > 0 ? currentServer.server_data.map((episode, index) => {
-              const isActive = index === currentEpisodeIndex;
-              return (
-                <button
-                  key={`${currentServerIndex}-${index}`}
-                  onClick={() => handleEpisodeChange(
-                    playerMode === "m3u8" ? episode.link_m3u8 : episode.link_embed,
-                    currentServerIndex,
-                    index
-                  )}
-                  className={cn(
-                    "relative flex h-10 w-full items-center justify-center px-2 py-2 rounded-xl transition-all border group text-center",
-                    isActive
-                       ? "bg-gradient-to-br from-green-600/90 to-green-700/90 text-white border-green-500 shadow-lg shadow-green-500/25 ring-2 ring-green-400/50"
-                      : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:border-white/20"
-                  )}
-                  title={episode.name}
-                >
-                  {isActive && (
-                    <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-lg border-2 border-zinc-900 z-10">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
-                  <span className={cn(
-                    "font-bold text-xs leading-tight truncate w-full text-center",
-                    isActive ? "text-white" : "text-white/90 group-hover:text-white"
-                  )}>
-                    {episode.name.replace(/(\d+)/g, (match) => String(parseInt(match, 10)))}
-                  </span>
-                </button>
-              );
-            }) : (
+            {currentServer?.server_data?.length > 0 ? (
+              // Re-sort the episodes logically from Episode 1 downwards if needed (ascending)
+              [...currentServer.server_data]
+                .sort((a, b) => {
+                  const numA = parseInt(a.name.match(/\d+/) ? a.name.match(/\d+/)[0] : "0") || 0;
+                  const numB = parseInt(b.name.match(/\d+/) ? b.name.match(/\d+/)[0] : "0") || 0;
+                  return numA - numB;
+                })
+                .map((episode) => {
+                  // Find the original index to keep player state matching the actual API array indexes
+                  const originalIndex = currentServer.server_data.findIndex(e => e.name === episode.name);
+                  const isActive = originalIndex === currentEpisodeIndex;
+
+                  return (
+                    <button
+                      key={`${currentServerIndex}-${originalIndex}`}
+                      onClick={() => handleEpisodeChange(
+                        playerMode === "m3u8" ? episode.link_m3u8 : episode.link_embed,
+                        currentServerIndex,
+                        originalIndex
+                      )}
+                      className={cn(
+                        "relative flex h-10 w-full items-center justify-center px-2 py-2 rounded-xl transition-all border group text-center",
+                        isActive
+                           ? "bg-gradient-to-br from-green-600/90 to-green-700/90 text-white border-green-500 shadow-lg shadow-green-500/25 ring-2 ring-green-400/50"
+                          : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:border-white/20"
+                      )}
+                      title={episode.name}
+                    >
+                      {isActive && (
+                        <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-lg border-2 border-zinc-900 z-10">
+                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                      <span className={cn(
+                        "font-bold text-xs leading-tight truncate w-full text-center",
+                        isActive ? "text-white" : "text-white/90 group-hover:text-white"
+                      )}>
+                        {episode.name.replace(/(\d+)/g, (match) => String(parseInt(match, 10)))}
+                      </span>
+                    </button>
+                  );
+              })
+            ) : (
               <div className="col-span-2 text-center py-8 text-white/60">
                 <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
