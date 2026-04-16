@@ -54,7 +54,7 @@ const LazyImage = memo(function LazyImage({
           src={hasError ? "/images/placeholder.webp" : imageSrc}
           alt={alt}
           fill
-          unoptimized
+          quality={75}
           decoding="async"
           loading={priority ? "eager" : "lazy"}
           sizes="(max-width: 480px) 160px, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"

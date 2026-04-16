@@ -95,7 +95,7 @@ const ContinueWatchingCard = memo(function ContinueWatchingCard({
           src={imgUrl}
           alt={movie.name}
           fill
-          unoptimized
+          quality={75}
           sizes="(max-width: 640px) 144px, 176px"
           className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
         />

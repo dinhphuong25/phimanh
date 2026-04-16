@@ -34,7 +34,7 @@ export default memo(function MovieMinimalCard({ movie }: MovieMinimalProps) {
           src={imageUrl}
           alt={movie.name}
           fill
-          unoptimized
+          quality={75}
           decoding="async"
           loading="lazy"
           fetchPriority="auto"

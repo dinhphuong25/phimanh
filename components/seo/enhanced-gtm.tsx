@@ -7,7 +7,7 @@ export default function EnhancedGTMTracking() {
   return (
     <Script
       id="gtm-enhanced-init"
-      strategy="afterInteractive"
+      strategy="lazyOnload"
       dangerouslySetInnerHTML={{
         __html: `
           (function() {

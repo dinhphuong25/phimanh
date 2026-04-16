@@ -244,7 +244,7 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
                           {/* Thumbnail */}
                           <div className="relative w-10 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-white/5 shadow-lg">
                             {s.image ? (
-                              <Image src={s.image} alt={s.title} fill sizes="40px" className="object-cover" unoptimized />
+                              <Image src={s.image} alt={s.title} fill sizes="40px" className="object-cover" quality={60} />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <svg className="w-4 h-4 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">

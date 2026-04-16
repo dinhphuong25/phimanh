@@ -152,8 +152,8 @@ export default function Episode({
               // Re-sort the episodes logically from Episode 1 downwards if needed (ascending)
               [...currentServer.server_data]
                 .sort((a, b) => {
-                  const numA = parseInt(a.name.match(/\d+/) ? a.name.match(/\d+/)[0] : "0") || 0;
-                  const numB = parseInt(b.name.match(/\d+/) ? b.name.match(/\d+/)[0] : "0") || 0;
+                  const numA = parseInt(a.name.match(/\d+/)?.[0] || "0") || 0;
+                  const numB = parseInt(b.name.match(/\d+/)?.[0] || "0") || 0;
                   return numA - numB;
                 })
                 .map((episode) => {
