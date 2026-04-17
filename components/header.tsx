@@ -186,7 +186,7 @@ function Header({
             </a>
 
             {/* Gmail */}
-            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kimdinhphuong.vn@gmail.com&su=Ho+tro+-+Rap+Phim+Chill"
+            <a href="mailto:kimdinhphuong.vn@gmail.com?subject=Hỗ trợ - Rạp Phim Chill"
               target="_blank" rel="noopener noreferrer"
               className="group flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/5 border border-transparent hover:border-[#ea4335]/25 transition-all duration-200">
               <div className="w-9 h-9 rounded-xl bg-[#ea4335]/15 border border-[#ea4335]/20 flex items-center justify-center flex-shrink-0">
