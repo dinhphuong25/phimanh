@@ -287,16 +287,31 @@ const VideoPlayer = ({
         });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoUrl;
-        video.addEventListener('loadedmetadata', () => {
+        
+        const removeLoading = () => {
           clearTimeout(loadTimeout);
           setIsLoading(false);
-          if (autoplay) video.play();
+        };
+
+        video.addEventListener('loadedmetadata', () => {
+          removeLoading();
+          if (autoplay) {
+            video.play().catch(e => console.warn('Autoplay blocked native:', e));
+          }
         });
+        
+        // Cứu cánh cho Safari Mobile: Safari hay suspend video trước khi tải xong metadata
+        video.addEventListener('suspend', removeLoading);
+        video.addEventListener('canplay', removeLoading);
+        
         video.addEventListener('error', () => {
           clearTimeout(loadTimeout);
           setError("Không thể tải video. Vui lòng thử chế độ Embed.");
           setIsLoading(false);
         });
+
+        // Bắt đầu ép load ngay lập tức
+        video.load();
       } else {
         clearTimeout(loadTimeout);
         setError("Trình duyệt không hỗ trợ phát video này. Vui lòng thử chế độ Embed.");
@@ -346,8 +361,12 @@ const VideoPlayer = ({
     const video = videoRef.current;
     if (!video) return;
 
-    const onPlay = () => setIsPlaying(true);
+    const onPlay = () => {
+      setIsPlaying(true);
+      setIsLoading(false);
+    };
     const onPause = () => setIsPlaying(false);
+    const onCanPlay = () => setIsLoading(false);
     const onTimeUpdate = () => {
       setCurrentTime(video.currentTime);
       if (video.buffered.length > 0) {
@@ -389,6 +408,7 @@ const VideoPlayer = ({
     video.addEventListener('durationchange', onDurationChange);
     video.addEventListener('waiting', onWaiting);
     video.addEventListener('playing', onPlaying);
+    video.addEventListener('canplay', onCanPlay);
     video.addEventListener('ended', onEndedEvent);
 
     return () => {
@@ -398,6 +418,7 @@ const VideoPlayer = ({
       video.removeEventListener('durationchange', onDurationChange);
       video.removeEventListener('waiting', onWaiting);
       video.removeEventListener('playing', onPlaying);
+      video.removeEventListener('canplay', onCanPlay);
       video.removeEventListener('ended', onEndedEvent);
       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     };

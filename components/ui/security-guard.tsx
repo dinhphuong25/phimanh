@@ -4,11 +4,13 @@ import { useEffect } from "react";
 
 export default function SecurityGuard() {
   useEffect(() => {
-    // Chỉ kích hoạt chức năng bảo vệ trên môi trường Production
-    if (process.env.NODE_ENV !== "production") return;
-
     // 1. Chặn click chuột phải (Context Menu)
     const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    // Chặn Copy / Cut
+    const handleCopy = (e: ClipboardEvent) => {
       e.preventDefault();
     };
 
@@ -45,12 +47,9 @@ export default function SecurityGuard() {
       }
     };
 
-    // 3. Chặn thao tác Drag & Drop hình ảnh/video để tải về
+    // 3. Chặn thao tác Drag & Drop mọi thứ
     const handleDragStart = (e: DragEvent) => {
-      const target = e.target as HTMLElement;
-      if (target && (target.tagName === "IMG" || target.tagName === "A" || target.tagName === "VIDEO")) {
-        e.preventDefault();
-      }
+      e.preventDefault();
     };
 
     // 4. In cảnh báo Console để răn đe
@@ -71,11 +70,15 @@ export default function SecurityGuard() {
     document.addEventListener("contextmenu", handleContextMenu);
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("dragstart", handleDragStart);
+    document.addEventListener("copy", handleCopy);
+    document.addEventListener("cut", handleCopy);
 
     return () => {
       document.removeEventListener("contextmenu", handleContextMenu);
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("dragstart", handleDragStart);
+      document.removeEventListener("copy", handleCopy);
+      document.removeEventListener("cut", handleCopy);
     };
   }, []);
 

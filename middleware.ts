@@ -60,9 +60,65 @@ function isCacheableAsset(pathname: string): boolean {
     return CACHE_ASSET_PATHS.some(pattern => pattern.test(pathname));
 }
 
+// -------------------------------------------------------------
+// IN-MEMORY RATE LIMITER (Hoạt động độc lập trên mỗi Edge Node)
+// -------------------------------------------------------------
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+const RATE_LIMIT_WINDOW_MS = 10000; // 10 giây
+const MAX_REQUESTS_PER_WINDOW = 60; // Max 60 requests / 10s (~6 req/s)
+
+function checkRateLimit(ip: string): boolean {
+    const now = Date.now();
+    const windowStart = now - RATE_LIMIT_WINDOW_MS;
+
+    // Flush cache cũ để không bị memory leak trên quá trình chạy dài
+    if (rateLimitMap.size > 5000) {
+        const entriesToDelete: string[] = [];
+        rateLimitMap.forEach((data, key) => {
+            if (data.resetTime < now) entriesToDelete.push(key);
+        });
+        entriesToDelete.forEach(key => rateLimitMap.delete(key));
+        
+        // Nếu vẫn đầy sau khi xóa, clear trắng luôn để cứu memory
+        if (rateLimitMap.size > 5000) rateLimitMap.clear();
+    }
+
+    const requestData = rateLimitMap.get(ip);
+    
+    if (!requestData || requestData.resetTime < now) {
+        // IP mới hoặc đã qua window cũ
+        rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+        return true;
+    }
+
+    if (requestData.count >= MAX_REQUESTS_PER_WINDOW) {
+        // Block
+        return false;
+    }
+
+    // Tăng count
+    requestData.count++;
+    rateLimitMap.set(ip, requestData);
+    return true;
+}
+
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const userAgent = request.headers.get('user-agent');
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+
+    // Anti-DDoS Rate Limiting
+    if (ip !== 'unknown' && !checkRateLimit(ip)) {
+        return new NextResponse('Too Many Requests - Anti DDoS Triggered', { 
+            status: 429,
+            headers: {
+                'Retry-After': '10',
+                'X-RateLimit-Limit': MAX_REQUESTS_PER_WINDOW.toString(),
+                'X-RateLimit-Remaining': '0',
+            }
+        });
+    }
 
     // Block suspicious paths
     if (isBlockedPath(pathname)) {
