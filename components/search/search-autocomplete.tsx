@@ -56,10 +56,23 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
     }
   }, [open]);
 
-  // Lock body scroll when open
+  // Lock body scroll when open (with iOS fix)
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (open) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      document.documentElement.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+      document.documentElement.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+      document.documentElement.style.overflow = "";
+    };
   }, [open]);
 
   const fetchSuggestions = useCallback(async (searchQuery: string) => {
@@ -121,6 +134,17 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
     }
   };
 
+  const handleClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  // Handle clicking on backdrop - close search
+  const handleBackdropClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  }, [handleClose]);
+
   const handleSelect = useCallback((suggestion: SearchSuggestion) => {
     if (suggestion.type === "movie") {
       router.push(`/watch?slug=${suggestion.slug}`);
@@ -148,7 +172,7 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
       e.preventDefault();
       setSelectedIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
     } else if (e.key === "Escape") {
-      onClose();
+      handleClose();
     }
   };
 
@@ -158,12 +182,13 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
     <div
       className="fixed inset-0 z-[99999] flex flex-col"
       style={{ backgroundColor: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
-      onClick={onClose}
+      onClick={handleBackdropClick}
     >
       {/* Search Container */}
       <div
-        className="w-full max-w-2xl mx-auto mt-[10vh] px-4"
+        className="w-full max-w-2xl mx-auto px-3 sm:px-4 pt-4 sm:pt-[10vh]"
         onClick={(e) => e.stopPropagation()}
+        style={{ maxHeight: "calc(100vh - 2rem)", overflow: "auto" }}
       >
         {/* Glassmorphism Search Box */}
         <div
@@ -194,6 +219,7 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
               autoComplete="off"
               spellCheck={false}
               aria-label="Tìm kiếm phim"
+              inputMode="search"
               className="flex-1 bg-transparent text-white text-lg placeholder-white/30 focus:outline-none"
             />
 
@@ -205,6 +231,12 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
                 <button
                   type="button"
                   onClick={() => { setQuery(""); setSuggestions([]); inputRef.current?.focus(); }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    setQuery(""); 
+                    setSuggestions([]); 
+                    inputRef.current?.focus();
+                  }}
                   className="text-white/30 hover:text-white/60 transition-colors"
                   aria-label="Xóa tìm kiếm"
                 >
@@ -234,6 +266,10 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
                       <li key={`movie-${s.slug}`} role="option" aria-selected={selectedIndex === i}>
                         <button
                           onClick={() => handleSelect(s)}
+                          onTouchEnd={(e) => {
+                            e.preventDefault();
+                            handleSelect(s);
+                          }}
                           className={cn(
                             "w-full flex items-center gap-4 px-5 py-3 transition-all duration-150 group text-left",
                             selectedIndex === i
@@ -290,6 +326,10 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
                       <li key={`cat-${s.slug}`}>
                         <button
                           onClick={() => handleSelect(s)}
+                          onTouchEnd={(e) => {
+                            e.preventDefault();
+                            handleSelect(s);
+                          }}
                           className="w-full flex items-center gap-4 px-5 py-3 hover:bg-white/5 transition-all group text-left border-l-2 border-transparent hover:border-primary"
                         >
                           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -343,6 +383,10 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
         {query.trim().length >= 2 && (
           <button
             onClick={handleSubmit}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              handleSubmit(e as any);
+            }}
             className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/70 transition-colors hover:bg-white/5"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
