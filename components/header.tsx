@@ -186,9 +186,21 @@ function Header({
             </a>
 
             {/* Gmail */}
-            <a href="mailto:kimdinhphuong.vn@gmail.com?subject=Hỗ trợ - Rạp Phim Chill"
-              target="_blank" rel="noopener noreferrer"
-              className="group flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/5 border border-transparent hover:border-[#ea4335]/25 transition-all duration-200">
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                const mailtoUrl = "mailto:kimdinhphuong.vn@gmail.com?subject=Hỗ trợ - Rạp Phim Chill";
+                const webUrl = "https://mail.google.com/mail/?view=cm&fs=1&to=kimdinhphuong.vn@gmail.com&su=Ho+tro+-+Rap+Phim+Chill";
+                
+                // Smart check: nếu là di động thì gọi app Mail, nếu là máy tính thì mở tab web Gmail
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                if (isMobile) {
+                  window.location.href = mailtoUrl;
+                } else {
+                  window.open(webUrl, "_blank");
+                }
+              }}
+              className="group flex items-center w-full text-left gap-3 px-3 py-3 rounded-xl hover:bg-white/5 border border-transparent hover:border-[#ea4335]/25 transition-all duration-200">
               <div className="w-9 h-9 rounded-xl bg-[#ea4335]/15 border border-[#ea4335]/20 flex items-center justify-center flex-shrink-0">
                 <Mail className="w-4.5 h-4.5 text-[#ff8a80]" />
               </div>
@@ -197,7 +209,7 @@ function Header({
                 <p className="text-[11px] text-white/40 truncate">kimdinhphuong.vn@gmail.com</p>
               </div>
               <svg className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-            </a>
+            </button>
           </div>
 
           {/* Footer */}
