@@ -100,11 +100,11 @@ function Sidebar({
     <>
       {/* Premium Overlay with blur */}
       <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         onClick={onClose}
       />
       {/* Premium Glassmorphism Sidebar */}
-      <div className={`fixed left-0 top-0 bottom-0 w-80 bg-black/95 backdrop-blur-2xl shadow-2xl z-50 transform transition-transform duration-300 overflow-y-auto border-r border-white/10 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
+      <div className={`fixed left-0 top-0 bottom-0 w-80 bg-black/95 backdrop-blur-2xl shadow-2xl z-[120] transform transition-transform duration-300 overflow-y-auto border-r border-white/10 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-black text-white tracking-wide">

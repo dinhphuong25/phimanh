@@ -128,18 +128,33 @@ interface StaggeredAnimationProps {
 
 export const StaggeredAnimation: React.FC<StaggeredAnimationProps> = ({
   children,
-  delay = 100,
+  delay = 50,
   animation = 'fade',
   direction = 'up'
 }) => {
   const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
 
   useEffect(() => {
+    // Fast stagger effect
+    let timeouts: NodeJS.Timeout[] = [];
+    
+    // Tối ưu hóa: Không chờ thời gian dài trên mobile
+    const speedMultiplier = window.innerWidth < 768 ? 0.3 : 1; 
+
     children.forEach((_, index) => {
-      setTimeout(() => {
-        setVisibleItems(prev => new Set([...prev, index]));
-      }, index * delay);
+      const waitTime = index * delay * speedMultiplier;
+      
+      const t = setTimeout(() => {
+        setVisibleItems(prev => {
+          const next = new Set(prev);
+          next.add(index);
+          return next;
+        });
+      }, waitTime);
+      timeouts.push(t);
     });
+
+    return () => timeouts.forEach(clearTimeout);
   }, [children, delay]);
 
   const renderChild = (child: React.ReactElement, index: number) => {
@@ -148,7 +163,7 @@ export const StaggeredAnimation: React.FC<StaggeredAnimationProps> = ({
     switch (animation) {
       case 'fade':
         return (
-          <Fade key={index} in={isVisible} timeout={600}>
+          <Fade key={index} in={isVisible} timeout={300}>
             <div>{child}</div>
           </Fade>
         );
@@ -157,7 +172,7 @@ export const StaggeredAnimation: React.FC<StaggeredAnimationProps> = ({
           <Slide
             key={index}
             in={isVisible}
-            timeout={600}
+            timeout={300}
             direction={direction}
           >
             <div>{child}</div>
@@ -165,13 +180,13 @@ export const StaggeredAnimation: React.FC<StaggeredAnimationProps> = ({
         );
       case 'grow':
         return (
-          <Grow key={index} in={isVisible} timeout={600}>
+          <Grow key={index} in={isVisible} timeout={300}>
             <div>{child}</div>
           </Grow>
         );
       case 'zoom':
         return (
-          <Zoom key={index} in={isVisible} timeout={600}>
+          <Zoom key={index} in={isVisible} timeout={300}>
             <div>{child}</div>
           </Zoom>
         );

@@ -133,6 +133,30 @@ export function ScrollToTopFAB() {
   );
 }
 
+export function SupportFAB({
+  href,
+  label = 'Hỗ trợ',
+}: {
+  href?: string;
+  label?: string;
+}) {
+  const supportHref = href || process.env.NEXT_PUBLIC_SUPPORT_URL || 'mailto:support@rapphimchill.pro';
+
+  return (
+    <MaterialRipple>
+      <a
+        href={supportHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={label}
+        className="fixed bottom-16 right-6 sm:bottom-16 sm:right-6 h-10 px-3 bg-black/85 hover:bg-black text-primary border border-primary/40 rounded-full material-elevation-3 hover:material-elevation-4 material-transition flex items-center justify-center group z-50"
+      >
+        <span className="text-xs font-semibold tracking-wide">Support</span>
+      </a>
+    </MaterialRipple>
+  );
+}
+
 // Quick action FABs for different contexts
 export function QuickActionFAB({
   type,

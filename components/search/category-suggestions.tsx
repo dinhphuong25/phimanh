@@ -32,7 +32,7 @@ const categoryIcons: { [key: string]: string } = {
 export default function CategorySuggestions({
   categories,
   limit = 6,
-  title = "📂 Khám Phá Thể Loại",
+  title = "Khám Phá Thể Loại",
 }: CategorySuggestionsProps) {
   if (!categories || categories.length === 0) {
     return null;

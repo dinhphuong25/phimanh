@@ -91,7 +91,25 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
       const results: SearchSuggestion[] = [];
 
       if (movies && Array.isArray(movies)) {
-        movies.slice(0, 6).forEach((movie: any) => {
+        // Tối ưu hoá logic tìm kiếm: Đẩy các phim có tên khớp chính xác (hoặc bắt đầu bằng từ khoá) lên đầu
+        const sortedMovies = [...movies].sort((a, b) => {
+          const q = searchQuery.toLowerCase().trim();
+          const nameA = (a.name || "").toLowerCase();
+          const originA = (a.origin_name || "").toLowerCase();
+          const nameB = (b.name || "").toLowerCase();
+          const originB = (b.origin_name || "").toLowerCase();
+
+          // Trọng số rlevancy:
+          // 3: Khớp chính xác hoàn toàn (VD: gõ "mai" -> "Mai")
+          // 2: Bắt đầu bằng từ khoá (VD: "mai" -> "Mai Hoa Phổ")
+          // 1: Chứa từ khoá (VD: "mai" -> "Ngày mai")
+          const weightA = (nameA === q || originA === q) ? 3 : (nameA.startsWith(q) ? 2 : (nameA.includes(` ${q} `) || nameA.includes(` ${q}`) || nameA.includes(`${q} `) ? 1 : 0));
+          const weightB = (nameB === q || originB === q) ? 3 : (nameB.startsWith(q) ? 2 : (nameB.includes(` ${q} `) || nameB.includes(` ${q}`) || nameB.includes(`${q} `) ? 1 : 0));
+          
+          return weightB - weightA;
+        });
+
+        sortedMovies.slice(0, 6).forEach((movie: any) => {
           const img = movie.thumb_url || movie.poster_url;
           results.push({
             type: "movie",
@@ -186,7 +204,7 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
     >
       {/* Search Container */}
       <div
-        className="w-full max-w-2xl mx-auto px-3 sm:px-4 pt-4 sm:pt-[10vh]"
+        className="w-full max-w-3xl mx-auto px-3 sm:px-4 pt-[8vh] sm:pt-[12vh]"
         onClick={(e) => e.stopPropagation()}
         style={{ maxHeight: "calc(100vh - 2rem)", overflow: "auto" }}
       >
@@ -200,12 +218,12 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
           }}
         >
           {/* Top accent line */}
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-80" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#f59e0b] to-transparent opacity-80" />
 
           {/* Input Row */}
-          <form onSubmit={handleSubmit} className="flex items-center px-5 py-4 gap-3 border-b border-white/5">
+          <form onSubmit={handleSubmit} className="flex items-center px-4 sm:px-6 py-3 sm:py-4 gap-3 sm:gap-4 border-b border-white/5">
             {/* Search Icon */}
-            <svg className="w-5 h-5 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#f59e0b] flex-shrink-0 drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
 
@@ -215,18 +233,18 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
               value={query}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder="Tìm kiếm phim, thể loại..."
+              placeholder="Bạn muốn xem phim gì hôm nay?"
               autoComplete="off"
               spellCheck={false}
               aria-label="Tìm kiếm phim"
               inputMode="search"
-              className="flex-1 bg-transparent text-white text-lg placeholder-white/30 focus:outline-none"
+              className="flex-1 bg-transparent text-white text-sm sm:text-xl font-medium placeholder-white/30 focus:outline-none min-w-0"
             />
 
             {/* Status */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-3 flex-shrink-0">
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white/10 border-t-primary rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-white/10 border-t-[#f59e0b] rounded-full animate-spin" />
               ) : query ? (
                 <button
                   type="button"
@@ -237,7 +255,7 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
                     setSuggestions([]); 
                     inputRef.current?.focus();
                   }}
-                  className="text-white/30 hover:text-white/60 transition-colors"
+                  className="p-1 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-all"
                   aria-label="Xóa tìm kiếm"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -246,21 +264,21 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
                 </button>
               ) : null}
 
-              <kbd className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md text-xs text-white/20 bg-white/5 border border-white/10">
+              <kbd className="hidden sm:flex items-center justify-center px-2.5 py-1.5 rounded-lg text-xs font-bold text-white/30 bg-white/5 border border-white/10 shadow-inner">
                 ESC
               </kbd>
             </div>
           </form>
 
           {/* Results / Trending */}
-          <div className="max-h-[55vh] overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent pr-1">
+          <div className="max-h-[60vh] overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-[#f59e0b]/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent pr-1">
             {suggestions.length > 0 ? (
               <ul role="listbox" aria-label="Kết quả tìm kiếm">
                 {/* Section: Movies */}
                 {suggestions.filter((s) => s.type === "movie").length > 0 && (
                   <>
-                    <li className="px-5 pt-3 pb-1">
-                      <span className="text-[10px] font-bold text-white/25 uppercase tracking-widest">Phim</span>
+                    <li className="px-4 sm:px-6 pt-3 sm:pt-4 pb-2">
+                      <span className="text-[11px] font-black text-[#f59e0b] uppercase tracking-[0.2em]">Phim</span>
                     </li>
                     {suggestions.filter((s) => s.type === "movie").map((s, i) => (
                       <li key={`movie-${s.slug}`} role="option" aria-selected={selectedIndex === i}>
@@ -271,19 +289,19 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
                             handleSelect(s);
                           }}
                           className={cn(
-                            "w-full flex items-center gap-4 px-5 py-3 transition-all duration-150 group text-left",
+                            "w-full flex items-center gap-3 px-4 sm:px-6 py-2.5 sm:py-3 transition-all duration-200 group text-left",
                             selectedIndex === i
-                              ? "bg-primary/10 border-l-2 border-primary"
-                              : "hover:bg-white/5 border-l-2 border-transparent"
+                              ? "bg-[#f59e0b]/10 border-l-4 border-[#f59e0b]"
+                              : "hover:bg-white/5 border-l-4 border-transparent"
                           )}
                         >
                           {/* Thumbnail */}
-                          <div className="relative w-10 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-gray-800 shadow-lg">
+                          <div className="relative w-10 h-14 sm:w-14 sm:h-20 rounded-md overflow-hidden flex-shrink-0 bg-neutral-900 shadow-md">
                             {s.image ? (
-                              <Image src={s.image} alt={s.title} fill sizes="40px" className="object-cover" quality={90} />
+                              <Image src={s.image} alt={s.title} fill unoptimized sizes="60px" className="object-cover group-hover:scale-110 transition-transform duration-500" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <svg className="w-4 h-4 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-5 h-5 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4" />
                                 </svg>
                               </div>
@@ -293,22 +311,22 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
                           {/* Info */}
                           <div className="flex-1 min-w-0">
                             <p className={cn(
-                              "font-semibold text-sm truncate transition-colors",
-                              selectedIndex === i ? "text-primary" : "text-white group-hover:text-primary"
+                              "font-bold text-sm sm:text-base truncate transition-colors",
+                              selectedIndex === i ? "text-[#f59e0b]" : "text-white group-hover:text-[#f59e0b]"
                             )}>
                               {s.title}
                             </p>
-                            <p className="text-xs text-white/40 mt-0.5">{s.subtitle}</p>
+                            <p className="text-xs sm:text-sm font-medium text-white/50 mt-1">{s.subtitle}</p>
                             {s.metadata && (
-                              <span className="inline-block mt-1 text-[10px] font-bold text-primary/80 bg-primary/10 px-2 py-0.5 rounded-full">
+                              <span className="inline-block mt-1.5 text-[10px] font-bold text-black bg-[#f59e0b] px-2 py-0.5 rounded shadow-sm">
                                 {s.metadata}
                               </span>
                             )}
                           </div>
 
                           {/* Arrow */}
-                          <svg className={cn("w-4 h-4 flex-shrink-0 transition-colors", selectedIndex === i ? "text-primary" : "text-white/15 group-hover:text-white/40")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          <svg className={cn("w-5 h-5 flex-shrink-0 transition-transform duration-300", selectedIndex === i ? "text-[#f59e0b] translate-x-1" : "text-white/10 group-hover:text-[#f59e0b] group-hover:translate-x-1")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                           </svg>
                         </button>
                       </li>

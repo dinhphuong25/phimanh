@@ -16,7 +16,11 @@ const getMovieData = unstable_cache(
 
 export async function generateMetadata({ searchParams }: any) {
   const { slug } = await searchParams;
+  if (!slug) return { title: "Xem phim | Rạp Phim Chill" };
+  
   try {
+    // Note: We use getMovieData which is cached, but Next.js will stream 
+    // the layout immediately anyway as long as the page is dynamic
     const data = await getMovieData(slug);
     const movie = data?.movie;
     if (!movie?.name) return { title: "Xem phim | Rạp Phim Chill" };

@@ -91,6 +91,8 @@ const nextConfig: NextConfig = {
   // Bundle optimization
   experimental: {
     optimizePackageImports: ['@mui/material', '@mui/icons-material', 'lucide-react'],
+    staticGenerationRetryCount: 3,
+    webpackBuildWorker: true, // Faster builds with worker threads
   },
 
   // Turbopack configuration (dev) - Webpack config below applies to production build only
@@ -124,7 +126,17 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Security headers for all routes
+      // Cache API responses for 5 minutes
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=300, stale-while-revalidate=600',
+          },
+        ],
+      },
+      // Security headers + Performance headers for all routes
       {
         source: '/(.*)',
         headers: [
@@ -155,6 +167,11 @@ const nextConfig: NextConfig = {
           {
             key: 'Content-Security-Policy',
             value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://player.phimapi.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' https: blob: *; connect-src 'self' https: *; frame-src 'self' https: *; object-src 'none'; base-uri 'self'; form-action 'self';",
+          },
+          // Performance optimization headers
+          {
+            key: 'Accept-CH',
+            value: 'DPR, Viewport-Width, Width',
           },
         ],
       },

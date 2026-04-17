@@ -29,20 +29,15 @@ interface HomeClientProps {
 // Memoized movie grid component
 const MovieGrid = memo(function MovieGrid({ movies }: { movies: any[] }) {
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-            {movies.slice(1, 13).map((movie: any, index: number) => (
-                <ScrollReveal
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4">
+            {movies.slice(1, 11).map((movie: any, index: number) => (
+                <div
                     key={`${movie._id || movie.slug}-${index}`}
-                    animation="grow"
-                    threshold={0.1}
+                    className="aspect-[2/3] w-full"
+                    style={{ contentVisibility: "auto" }}
                 >
-                    <div
-                        className="aspect-[2/3]"
-                        style={{ animationDelay: `${index * 0.02}s` }}
-                    >
-                        <MovieMinimalCard movie={movie} />
-                    </div>
-                </ScrollReveal>
+                    <MovieMinimalCard movie={movie} />
+                </div>
             ))}
         </div>
     );
@@ -153,10 +148,12 @@ function HomeClient({
                 <div className="container mx-auto px-2 sm:px-4 pb-8 sm:pb-16">
                     <div className="space-y-4 sm:space-y-10">
                         {/* Continue Watching - above everything, client-side localStorage */}
-                        <ContinueWatching />
+                        <div style={{ contentVisibility: "auto" }}>
+                            <ContinueWatching />
+                        </div>
 
                         {/* New Updates Section */}
-                        <section className="new-updates-section">
+                        <section className="new-updates-section" style={{ contentVisibility: "auto" }}>
                             <SectionHeader
                                 lastUpdated={lastUpdated}
                                 isRefreshing={isRefreshing}
@@ -166,15 +163,19 @@ function HomeClient({
                         </section>
 
                         {/* Personalized Suggestions */}
-                        <PersonalizedSuggestions limit={6} />
+                        <div style={{ contentVisibility: "auto" }}>
+                            <PersonalizedSuggestions limit={6} />
+                        </div>
 
                         {/* Trending Movies */}
-                        <TrendingSuggestions limit={8} />
+                        <div style={{ contentVisibility: "auto" }}>
+                            <TrendingSuggestions limit={8} />
+                        </div>
 
                         {/* Recently Watched - Lazy loaded */}
-                        <LazyRecentlyWatched limit={6} />
-
-
+                        <div style={{ contentVisibility: "auto" }}>
+                            <LazyRecentlyWatched limit={6} />
+                        </div>
 
                         {/* Topic Sections - Lazy loaded */}
                         <TopicSections topics={displayTopics} />

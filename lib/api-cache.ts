@@ -1,20 +1,26 @@
 /**
  * Simple in-memory cache with TTL support for API requests
+ * Optimized with LRU eviction and memory management
  */
 
 interface CacheEntry<T> {
   data: T;
   timestamp: number;
   expiresAt: number;
+  accessCount: number;
+  lastAccessed: number;
 }
 
 class ApiCache {
   private cache: Map<string, CacheEntry<any>> = new Map();
   private pendingRequests: Map<string, Promise<any>> = new Map();
   private defaultTTL = 60000; // 1 minute default
+  private maxSize = 100; // Max cache entries
+  private maxMemoryMB = 50; // Max memory in MB
 
   /**
    * Get cached data if valid, otherwise return null
+   * Updates access statistics for LRU
    */
   get<T>(key: string): T | null {
     const entry = this.cache.get(key);
@@ -25,19 +31,55 @@ class ApiCache {
       return null;
     }
     
+    // Update access stats for LRU eviction
+    entry.accessCount++;
+    entry.lastAccessed = Date.now();
+    
     return entry.data as T;
   }
 
   /**
    * Set cache with optional TTL
+   * Automatically evicts old entries if size exceeds limit
    */
   set<T>(key: string, data: T, ttl: number = this.defaultTTL): void {
     const now = Date.now();
+    
+    // Evict LRU entries if size exceeds limit
+    if (this.cache.size >= this.maxSize) {
+      this.evictLRU();
+    }
+    
     this.cache.set(key, {
       data,
       timestamp: now,
       expiresAt: now + ttl,
+      accessCount: 1,
+      lastAccessed: now,
     });
+  }
+
+  /**
+   * Evict least recently used entry
+   */
+  private evictLRU(): void {
+    let lruKey: string | null = null;
+    let minScore = Infinity;
+
+    for (const [key, entry] of this.cache.entries()) {
+      // Score = accessCount / age (lower = older, less accessed)
+      const age = Date.now() - entry.lastAccessed;
+      const score = entry.accessCount / (age / 1000 + 1);
+      
+      if (score < minScore) {
+        minScore = score;
+        lruKey = key;
+      }
+    }
+
+    if (lruKey) {
+      this.cache.delete(lruKey);
+    }
   }
 
   /**
@@ -70,7 +112,25 @@ class ApiCache {
   }
 
   /**
+   * Clear expired entries and return count
+   */
+  clearExpired(): number {
+    const now = Date.now();
+    let count = 0;
+
+    for (const [key, entry] of this.cache.entries()) {
+      if (now > entry.expiresAt) {
+        this.cache.delete(key);
+        count++;
+      }
+    }
+
+    return count;
+  }
+
+  /**
    * Deduplicate concurrent requests - if same request is in-flight, reuse it
+   * Prevents thundering herd problem
    */
   async dedupeRequest<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
     // Check if request is already pending
@@ -80,9 +140,15 @@ class ApiCache {
     }
 
     // Create new request promise
-    const request = fetcher().finally(() => {
-      this.pendingRequests.delete(key);
-    });
+    const request = fetcher()
+      .catch((error) => {
+        // Clean up on error so retries can happen
+        this.pendingRequests.delete(key);
+        throw error;
+      })
+      .finally(() => {
+        this.pendingRequests.delete(key);
+      });
 
     this.pendingRequests.set(key, request);
     return request;
@@ -109,12 +175,19 @@ class ApiCache {
   }
 
   /**
-   * Get cache statistics
+   * Get cache statistics for monitoring
    */
   getStats() {
     return {
       size: this.cache.size,
+      maxSize: this.maxSize,
       pendingRequests: this.pendingRequests.size,
+      entries: Array.from(this.cache.entries()).map(([key, entry]) => ({
+        key,
+        accessCount: entry.accessCount,
+        age: Date.now() - entry.timestamp,
+        expiresIn: Math.max(0, entry.expiresAt - Date.now()),
+      })),
     };
   }
 }

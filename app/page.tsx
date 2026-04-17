@@ -44,16 +44,16 @@ export async function generateMetadata({ searchParams }: HomeProps) {
   const topic = params.topic;
   const typeList = params.typeList;
 
-  // Dùng cached function — không re-fetch nếu page component đã fetch
-  const categories = await getCachedCategories();
   let postTitle: { name: string } | undefined;
 
   if (typeList) {
     postTitle = { name: "Kết quả Lọc" };
-  } else if (category) {
-    postTitle = (categories as any[]).find((c: any) => c.slug === category);
   } else if (topic) {
     postTitle = TOPICS.find((t) => t.slug === topic);
+  } else if (category) {
+    // Chỉ fetch category khi filter cate có trên URL, tránh block quá trình stream Next.js
+    const categories = await getCachedCategories();
+    postTitle = (categories as any[]).find((c: any) => c.slug === category);
   }
 
   const titleText =

@@ -22,13 +22,23 @@
   100% { transform: translateX(200%); }
 }
 
+/* Reduced animation heavily on mobile */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @keyframes heroFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 @keyframes heroSlideUp {
-  from { opacity: 0; transform: translateY(40px); }
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 

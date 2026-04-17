@@ -1,5 +1,5 @@
-// Security Middleware for Next.js
-// Protects against common attacks
+// Security & Performance Middleware for Next.js
+// Protects against common attacks and optimizes performance
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -36,6 +36,14 @@ const BLOCKED_PATHS = [
     '/xmlrpc.php',
 ];
 
+// Cache-friendly paths (static assets that can be cached aggressively)
+const CACHE_ASSET_PATHS = [
+    /^\/_next\/static\//,
+    /\.woff2?$/,
+    /\.ttf$/,
+    /\.eot$/,
+];
+
 function isBlockedUserAgent(userAgent: string | null): boolean {
     if (!userAgent) return false;
 
@@ -46,6 +54,10 @@ function isBlockedUserAgent(userAgent: string | null): boolean {
 function isBlockedPath(pathname: string): boolean {
     const lowerPath = pathname.toLowerCase();
     return BLOCKED_PATHS.some(blocked => lowerPath.startsWith(blocked));
+}
+
+function isCacheableAsset(pathname: string): boolean {
+    return CACHE_ASSET_PATHS.some(pattern => pattern.test(pathname));
 }
 
 export function middleware(request: NextRequest) {
@@ -68,6 +80,17 @@ export function middleware(request: NextRequest) {
     // Add security headers (X-Frame-Options removed - it blocks embed player iframe)
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('X-XSS-Protection', '1; mode=block');
+    
+    // Add compression headers for better performance
+    response.headers.set('Vary', 'Accept-Encoding');
+    
+    // Add cache headers for static assets
+    if (isCacheableAsset(pathname)) {
+        response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+
+    // Add performance timing header for monitoring
+    response.headers.set('X-Response-Time', new Date().getTime().toString());
 
     return response;
 }

@@ -13,7 +13,7 @@ interface TrendingSuggestionsProps {
 
 export default function TrendingSuggestions({
   limit = 8,
-  title = "🔥 Phim Hot Nhất",
+  title = "Phim Hot Nhất",
 }: TrendingSuggestionsProps) {
   const [movies, setMovies] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);

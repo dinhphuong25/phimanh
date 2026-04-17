@@ -8,10 +8,10 @@ export function SplashScreen() {
   const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsFading(true);
-      setTimeout(() => setShow(false), 500); // Wait for fade out animation
-    }, 2000); // 2s solid + 0.5s fade out = 2.5s total
+    // Ẩn splash screen ngay lập tức sau khi hydrate xong 
+    // thay vì bắt người dùng đợi 2-3 giây vô nghĩa
+    setIsFading(true);
+    const timer = setTimeout(() => setShow(false), 300); // Wait for fade out animation
 
     return () => clearTimeout(timer);
   }, []);
@@ -19,7 +19,7 @@ export function SplashScreen() {
   if (!show) return null;
 
   return (
-    <div className={`fixed inset-0 z-[9999] flex items-center justify-center bg-[#09090b] transition-opacity duration-500 pointer-events-none ${isFading ? 'opacity-0' : 'opacity-100'}`}>
+    <div className={`fixed inset-0 z-[9999] flex items-center justify-center bg-[#09090b] transition-opacity duration-300 pointer-events-none ${isFading ? 'opacity-0' : 'opacity-100'}`}>
       <div className="flex flex-col items-center justify-center text-center">
         <div className="relative flex items-center justify-center w-24 h-24 mb-6">
           {/* Hiệu ứng tỏa sáng xung quanh */}

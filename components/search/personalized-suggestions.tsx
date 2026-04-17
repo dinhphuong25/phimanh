@@ -12,7 +12,7 @@ interface PersonalizedSuggestionsProps {
 
 export default function PersonalizedSuggestions({
   limit = 6,
-  title = "💡 Dành Cho Bạn",
+  title = "Dành Cho Bạn",
 }: PersonalizedSuggestionsProps) {
   const [movies, setMovies] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);

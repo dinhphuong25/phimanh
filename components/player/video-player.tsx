@@ -930,43 +930,6 @@ const VideoPlayer = ({
 
           {/* Right Controls */}
           <div className="flex items-center gap-2">
-            {/* Settings Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" aria-label="Cài đặt">
-                  <Settings className="w-5 h-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-black/90 border-gray-800 text-white backdrop-blur-md w-56">
-                <DropdownMenuLabel>Cài đặt</DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-gray-700" />
-
-                {/* Speed Submenu */}
-                <DropdownMenuLabel className="text-xs text-gray-400 mt-2">Tốc độ phát</DropdownMenuLabel>
-                <DropdownMenuRadioGroup value={playbackRate.toString()} onValueChange={(v) => handlePlaybackRateChange(parseFloat(v))}>
-                  <DropdownMenuRadioItem value="0.5">0.5x</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="1">Chuẩn</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="1.5">1.5x</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="2">2.0x</DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-
-                {/* Quality Submenu (if HLS) */}
-                {qualities.length > 0 && (
-                  <>
-                    <DropdownMenuSeparator className="bg-gray-700 my-2" />
-                    <DropdownMenuLabel className="text-xs text-gray-400">Chất lượng</DropdownMenuLabel>
-                    <DropdownMenuRadioGroup value={quality.toString()} onValueChange={(v) => handleQualityChange(parseInt(v))}>
-                      <DropdownMenuRadioItem value="-1">Tự động</DropdownMenuRadioItem>
-                      {qualities.map((q) => (
-                        <DropdownMenuRadioItem key={q.level} value={q.level.toString()}>
-                          {q.height}p
-                        </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
 
 
             <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-white hover:bg-white/20" aria-label={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>
