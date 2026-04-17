@@ -160,33 +160,7 @@ function Sidebar({
             </Link>
           </div>
 
-          {/* New Updates */}
-          <div>
-            <Link
-              href="/new-updates"
-              className={`flex items-center space-x-3 p-3.5 rounded-xl transition-all duration-300 ${isActiveLink("/new-updates")
-                ? "bg-gradient-to-r from-primary/20 to-amber-500/20 border border-primary/40 text-primary shadow-lg shadow-primary/20"
-                : "hover:bg-white/5 border border-transparent hover:border-white/10"
-                }`}
-              onClick={() => handleLinkClick("/new-updates")}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-5 h-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span className="font-bold text-white">Mới cập nhật</span>
-            </Link>
-          </div>
+          {/* Removed New Updates menu item as requested */}
 
           {/* Phim Chiếu Rạp */}
           <div>
