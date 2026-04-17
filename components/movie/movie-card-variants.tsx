@@ -46,7 +46,7 @@ const LazyImage = memo(function LazyImage({
   return (
     <div ref={imgRef} className={`relative ${className}`} style={{ contentVisibility: "auto", containIntrinsicSize: "auto 400px" }}>
       {!isLoaded && (
-        <div className="absolute inset-0 bg-gray-900/50 animate-pulse backdrop-blur-md" />
+        <div className="absolute inset-0 bg-gray-900/30 animate-pulse" />
       )}
 
       {isInView && (
@@ -54,7 +54,7 @@ const LazyImage = memo(function LazyImage({
           src={hasError ? "/images/placeholder.webp" : imageSrc}
           alt={alt}
           fill
-          quality={75}
+          quality={95}
           decoding="async"
           loading={priority ? "eager" : "lazy"}
           sizes="(max-width: 480px) 160px, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
@@ -88,7 +88,7 @@ export const MovieCardDefault = memo(function MovieCardDefault({ movie }: { movi
         />
 
         {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 group-hover:opacity-70 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-30 group-hover:opacity-20 transition-opacity duration-300" />
 
         {/* Hover glow */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-primary/10 to-transparent" />
@@ -110,7 +110,7 @@ export const MovieCardDefault = memo(function MovieCardDefault({ movie }: { movi
         </div>
 
         {/* Info bar */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 z-20 bg-white/5 backdrop-blur-xl border-t border-white/10">
+        <div className="absolute bottom-0 left-0 right-0 p-3 z-20 bg-gradient-to-t from-black/60 to-transparent border-t border-white/10">
           <h3 className="font-bold text-white text-xs sm:text-sm line-clamp-2 leading-tight mb-1.5">
             {movie.name}
           </h3>
