@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 const SearchPanel = dynamic(() => import("@/components/search/search-autocomplete"), { ssr: false });
 const Sidebar = dynamic(() => import("@/components/sidebar"), { ssr: false });
 import { useLoading } from "@/components/ui/loading-context";
-import { Search, Menu, Moon, Sun, Headset, Mail, MessageCircle } from "lucide-react";
+import { Search, Menu, Moon, Sun, Headset, Mail, MessageCircle, Facebook } from "lucide-react";
 import { throttle } from "@/lib/api-cache";
 
 interface HeaderProps {
@@ -176,9 +176,7 @@ function Header({
             <a href={supportFacebookHref} target="_blank" rel="noopener noreferrer"
               className="group flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white/5 border border-transparent hover:border-[#1877f2]/25 transition-all duration-200">
               <div className="w-9 h-9 rounded-xl bg-[#1877f2]/15 border border-[#1877f2]/20 flex items-center justify-center flex-shrink-0">
-                <svg className="w-4.5 h-4.5 text-[#6baeff]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M13.5 9H16V6h-2.5C10.6 6 9 7.7 9 10.7V13H7v3h2v6h3v-6h2.6l.4-3H12v-2.1c0-1 .3-1.9 1.5-1.9z" />
-                </svg>
+                <Facebook className="w-[18px] h-[18px] text-[#6baeff]" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-white leading-tight">Facebook</p>

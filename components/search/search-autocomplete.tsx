@@ -238,7 +238,8 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
               spellCheck={false}
               aria-label="Tìm kiếm phim"
               inputMode="search"
-              className="flex-1 bg-transparent text-white text-sm sm:text-xl font-medium placeholder-white/30 focus:outline-none min-w-0"
+              className="flex-1 bg-transparent text-white text-base sm:text-xl font-medium placeholder-white/30 focus:outline-none min-w-0"
+              style={{ fontSize: '16px' }}
             />
 
             {/* Status */}
