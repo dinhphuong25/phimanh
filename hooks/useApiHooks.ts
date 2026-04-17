@@ -10,8 +10,8 @@ interface NewUpdatesData {
 }
 
 const API_BASE = "https://phimapi.com";
-const REFRESH_INTERVAL = 60000;
-const CACHE_TTL = 30000;
+const REFRESH_INTERVAL = 300000; // 5 minutes (tránh spam server khi 100k users online)
+const CACHE_TTL = 120000; // 2 minutes client-side cache
 
 // Route all fetches through /api/phim proxy for server-side caching
 function proxyUrl(url: string): string {
@@ -229,7 +229,7 @@ export function useTopicsWithMovies(topics: any[]) {
             if (document.visibilityState === "visible" && !fetchInProgress.current) {
                 fetchData();
             }
-        }, 120000);
+        }, 300000);
 
         return () => clearInterval(interval);
     }, [fetchData]);
@@ -400,7 +400,7 @@ export function useFilteredMovies(params: {
             if (document.visibilityState === "visible" && !fetchInProgress.current) {
                 fetchData(true);
             }
-        }, 120000);
+        }, 300000);
 
         return () => clearInterval(interval);
     }, [fetchData]);
