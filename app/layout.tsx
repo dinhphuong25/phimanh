@@ -13,6 +13,7 @@ import { PWAInstaller, PerformanceMonitor } from "@/components/pwa-init";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import SecurityGuard from "@/components/ui/security-guard";
+import PipWrapper from "@/components/player/pip-wrapper";
 
 // Chỉ load 1 font thay vì 3 — giảm 60% thời gian font download
 const inter = Inter({
@@ -155,6 +156,8 @@ export default function RootLayout({
         <PerformanceMonitor />
         <Analytics />
         <SpeedInsights />
+        {/* Global PiP player — persist across navigation */}
+        <PipWrapper />
       </body>
     </html>
   );

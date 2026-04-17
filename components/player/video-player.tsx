@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import HLS from 'hls.js';
+import { pipStore } from "@/lib/pip-store";
 import {
   Play,
   Pause,
@@ -45,6 +46,8 @@ interface VideoPlayerProps {
   onNextEpisode?: () => void;
   isTheaterMode?: boolean;
   onToggleTheaterMode?: () => void;
+  movieName?: string;
+  movieSlug?: string;
 }
 
 const formatTime = (seconds: number) => {
@@ -71,11 +74,42 @@ const VideoPlayer = ({
   onNextEpisode,
   isTheaterMode,
   onToggleTheaterMode,
+  movieName,
+  movieSlug,
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hlsRef = useRef<HLS | null>(null);
   const router = useRouter();
+
+  // Refs to track latest values for cleanup
+  const movieNameRef = useRef(movieName);
+  const movieSlugRef = useRef(movieSlug);
+  const videoUrlRef = useRef(videoUrl);
+  const posterRef = useRef(poster);
+  useEffect(() => { movieNameRef.current = movieName; }, [movieName]);
+  useEffect(() => { movieSlugRef.current = movieSlug; }, [movieSlug]);
+  useEffect(() => { videoUrlRef.current = videoUrl; }, [videoUrl]);
+  useEffect(() => { posterRef.current = poster; }, [poster]);
+
+  // Trigger global PiP when component unmounts with video playing
+  useEffect(() => {
+    return () => {
+      const video = videoRef.current;
+      const url = videoUrlRef.current;
+      const slug = movieSlugRef.current;
+      if (video && !video.paused && video.currentTime > 3 && url && slug) {
+        pipStore.set({
+          videoUrl: url,
+          movieName: movieNameRef.current || '',
+          movieSlug: slug,
+          poster: posterRef.current,
+          currentTime: video.currentTime,
+        });
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // State
   const [isPlaying, setIsPlaying] = useState(false);

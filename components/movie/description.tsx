@@ -309,6 +309,8 @@ export default function Description({ movie, serverData }: any) {
                 autoplay={true}
                 poster={movie.thumb_url || movie.poster_url}
                 initialTime={resumeTime}
+                movieName={movie.name}
+                movieSlug={movie.slug}
                 onProgress={handleProgress}
                 onSwitchToEmbed={() => {
                   setPlayerMode('embed');

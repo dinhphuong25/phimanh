@@ -285,10 +285,6 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
                       <li key={`movie-${s.slug}`} role="option" aria-selected={selectedIndex === i}>
                         <button
                           onClick={() => handleSelect(s)}
-                          onTouchEnd={(e) => {
-                            e.preventDefault();
-                            handleSelect(s);
-                          }}
                           className={cn(
                             "w-full flex items-center gap-3 px-4 sm:px-6 py-2.5 sm:py-3 transition-all duration-200 group text-left",
                             selectedIndex === i
@@ -345,10 +341,6 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
                       <li key={`cat-${s.slug}`}>
                         <button
                           onClick={() => handleSelect(s)}
-                          onTouchEnd={(e) => {
-                            e.preventDefault();
-                            handleSelect(s);
-                          }}
                           className="w-full flex items-center gap-4 px-5 py-3 hover:bg-white/5 transition-all group text-left border-l-2 border-transparent hover:border-primary"
                         >
                           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -402,10 +394,6 @@ function SearchPanel({ open, onClose, categories = [] }: SearchPanelProps) {
         {query.trim().length >= 2 && (
           <button
             onClick={handleSubmit}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              handleSubmit(e as any);
-            }}
             className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm text-white/40 hover:text-white/70 transition-colors hover:bg-white/5"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
