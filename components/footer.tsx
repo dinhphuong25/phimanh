@@ -2,8 +2,8 @@
 
 export default function Footer() {
   return (
-    <footer className="w-full py-4 border-t border-white/5">
-      <div className="container mx-auto px-4 text-center space-y-1">
+    <footer className="w-full pt-6 pb-28 md:pb-6 border-t border-white/5">
+      <div className="container mx-auto px-4 text-center space-y-2">
         <p className="text-xs text-gray-400">
           Được quản lý và phát triển bởi{" "}
           <a
