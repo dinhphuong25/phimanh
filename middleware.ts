@@ -130,6 +130,27 @@ export function middleware(request: NextRequest) {
         return new NextResponse('Forbidden', { status: 403 });
     }
 
+    // Strip URL tracking parameters to ensure ISR cache hit (Facebook fbclid issue)
+    const url = request.nextUrl.clone();
+    let hasTrackingParams = false;
+    
+    const trackingParams = [
+        'fbclid', 'gclid', 'wbraid', 'gbraid', 'ref', 'source',
+        'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'
+    ];
+    
+    trackingParams.forEach(param => {
+        if (url.searchParams.has(param)) {
+            url.searchParams.delete(param);
+            hasTrackingParams = true;
+        }
+    });
+
+    if (hasTrackingParams) {
+        // Redirect to the clean URL so it hits the static Next.js cache
+        return NextResponse.redirect(url, 307);
+    }
+
     // Continue with request
     const response = NextResponse.next();
 
