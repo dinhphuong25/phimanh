@@ -36,11 +36,11 @@ export const metadata: Metadata = {
     "phim lẻ chiếu rạp", "phim hành động", "phim tình cảm", "phim kinh dị",
     "xem phim online", "phim hay 2024", "phimanhd",
   ],
-  metadataBase: new URL("https://rapphimchill.pro"),
+  metadataBase: new URL("https://rapphimchill.app"),
   openGraph: {
     title: "Rạp Phim Chill - Kho phim HD chất lượng cao miễn phí",
     description: "Khám phá hơn 50,000+ bộ phim HD chất lượng cao thuộc mọi thể loại.",
-    url: "https://rapphimchill.pro",
+    url: "https://rapphimchill.app",
     siteName: "Rạp Phim Chill",
     type: "website",
     locale: "vi_VN",
@@ -66,14 +66,12 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  alternates: { canonical: "https://rapphimchill.pro" },
+  alternates: { canonical: "https://rapphimchill.app" },
+  verification: {
+    google: "oOs1HYmXd-muliYGGR8v91joJyTEVTbr-mRtnIpXrPY",
+  },
   icons: {
-    icon: [
-      { url: "/favicon.png", type: "image/png", sizes: "512x512" },
-      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
-    ],
-    shortcut: "/favicon.png",
-    apple: "/favicon.png",
+    icon: "/favicon.ico",
   },
 };
 
@@ -141,8 +139,8 @@ export default function RootLayout({
         <SecurityGuard />
 
         {/* Structured Data */}
-        <WebsiteStructuredData url="https://rapphimchill.pro" />
-        <OrganizationStructuredData url="https://rapphimchill.pro" />
+        <WebsiteStructuredData url="https://rapphimchill.app" />
+        <OrganizationStructuredData url="https://rapphimchill.app" />
 
         <HydrationFix />
         <MaterialThemeProvider>

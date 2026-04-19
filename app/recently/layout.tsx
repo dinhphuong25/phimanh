@@ -4,12 +4,12 @@ export const metadata: Metadata = {
   title: "Phim đã xem gần đây",
   description: "Xem lại danh sách phim bạn đã xem gần đây trên Rạp Phim Chill.",
   alternates: {
-    canonical: "https://rapphimchill.pro/recently",
+    canonical: "https://rapphimchill.app/recently",
   },
   openGraph: {
     title: "Phim đã xem gần đây | Rạp Phim Chill",
     description: "Xem lại danh sách phim bạn đã xem gần đây trên Rạp Phim Chill.",
-    url: "https://rapphimchill.pro/recently",
+    url: "https://rapphimchill.app/recently",
     type: "website",
   },
   twitter: {

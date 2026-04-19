@@ -92,7 +92,7 @@ export function MovieStructuredData({ movie, url }: MovieStructuredDataProps) {
         "name": "Rạp Phim Chill",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://rapphimchill.pro/favicon.png"
+          "url": "https://rapphimchill.app/favicon.png"
         }
       }
     }

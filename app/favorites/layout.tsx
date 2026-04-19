@@ -14,12 +14,12 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://rapphimchill.pro/favorites",
+    canonical: "https://rapphimchill.app/favorites",
   },
   openGraph: {
     title: "Phim yêu thích | Rạp Phim Chill",
     description: "Danh sách phim bạn đã đánh dấu yêu thích trên Rạp Phim Chill.",
-    url: "https://rapphimchill.pro/favorites",
+    url: "https://rapphimchill.app/favorites",
     type: "website",
   },
   twitter: {

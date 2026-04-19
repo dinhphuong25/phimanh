@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 import PhimApi from "@/libs/phimapi.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://rapphimchill.pro"; // Unified base URL
+  const baseUrl = "https://rapphimchill.app"; // Unified base URL
   const api = new PhimApi();
 
   try {
