@@ -93,8 +93,10 @@ function Header({
               {/* Standard Logo Design */}
               <div className="relative flex items-center gap-1.5 sm:gap-2">
                 {/* Play Icon Wrapper - Favicon Style */}
-                <div className="relative w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center transition-all duration-300 group-hover:scale-105 shadow-[0_4px_10px_rgba(229,9,20,0.3)] rounded-lg overflow-hidden">
-                  <Image src="/icon-192.png" alt="Rạp Phim Chill" width={32} height={32} className="w-full h-full object-cover" priority />
+                <div className="relative w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-[#dc2626] transition-all duration-300 group-hover:scale-105 shadow-[0_4px_10px_rgba(220,38,38,0.4)] rounded-lg overflow-hidden">
+                  <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white ml-0.5 relative z-10" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
                 </div>
 
                 {/* Logo Text - Two lines balanced */}

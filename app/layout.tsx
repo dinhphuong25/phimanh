@@ -44,14 +44,12 @@ export const metadata: Metadata = {
     siteName: "Rạp Phim Chill",
     type: "website",
     locale: "vi_VN",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Rạp Phim Chill" }],
   },
   twitter: {
     card: "summary_large_image",
     site: "@phimanh",
     title: "Rạp Phim Chill - Xem phim HD chất lượng cao miễn phí",
     description: "Kho phim HD chất lượng cao với hơn 50,000+ bộ phim.",
-    images: ["/twitter-image.png"],
   },
   applicationName: "Rạp Phim Chill",
   referrer: "origin-when-cross-origin",
@@ -69,9 +67,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://rapphimchill.app" },
   verification: {
     google: "oOs1HYmXd-muliYGGR8v91joJyTEVTbr-mRtnIpXrPY",
-  },
-  icons: {
-    icon: "/favicon.ico",
   },
 };
 
