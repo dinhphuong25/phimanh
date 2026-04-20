@@ -82,6 +82,9 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
 
+        {/* Facebook App ID cho Sharing Debugger */}
+        <meta property="fb:app_id" content={process.env.NEXT_PUBLIC_FB_APP_ID || "10000000000000"} />
+
         {/* Critical inline CSS: show body ngay lập tức, không hid opacity */}
         <style
           suppressHydrationWarning
