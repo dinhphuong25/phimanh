@@ -34,6 +34,8 @@ export default memo(function MovieMinimalCard({ movie }: MovieMinimalProps) {
           fill
           sizes="(max-width: 480px) 45vw, (max-width: 768px) 33vw, 20vw"
           quality={50}
+          loading="lazy"
+          decoding="async"
           className="absolute inset-0 w-full h-full object-cover"
         />
 

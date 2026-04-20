@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Suspense, useRef, useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const SearchPanel = dynamic(() => import("@/components/search/search-autocomplete"), { ssr: false });
@@ -92,10 +93,8 @@ function Header({
               {/* Standard Logo Design */}
               <div className="relative flex items-center gap-1.5 sm:gap-2">
                 {/* Play Icon Wrapper - Favicon Style */}
-                <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#f59e0b] flex items-center justify-center transition-all duration-300 group-hover:scale-105 shadow-[0_4px_10px_rgba(245,158,11,0.3)]">
-                  <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-black ml-0.5 relative z-10" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
+                <div className="relative w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center transition-all duration-300 group-hover:scale-105 shadow-[0_4px_10px_rgba(229,9,20,0.3)] rounded-lg overflow-hidden">
+                  <Image src="/icon-192.png" alt="Rạp Phim Chill" width={32} height={32} className="w-full h-full object-cover" priority />
                 </div>
 
                 {/* Logo Text - Two lines balanced */}

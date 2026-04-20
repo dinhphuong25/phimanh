@@ -2,6 +2,7 @@
 
 import { memo, useMemo } from "react";
 import { useNewUpdates, useTopicsWithMovies } from "@/hooks/useApiHooks";
+import { usePerformanceMonitoring, useMemoryMonitoring } from "@/hooks/usePerformance";
 import HeroSection from "@/components/hero-section";
 import MovieMinimalCard from "@/components/movie/movie-minimal";
 import LiveStatus from "@/components/live-status";
@@ -113,6 +114,10 @@ function HomeClient({
     } = useNewUpdates();
 
     const { topicsData } = useTopicsWithMovies(topics);
+
+    // Thêm theo dõi hiệu năng
+    usePerformanceMonitoring();
+    useMemoryMonitoring();
 
     // Memoized computed values
     const displayMovies = useMemo(() => 
