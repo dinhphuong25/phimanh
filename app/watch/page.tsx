@@ -24,8 +24,8 @@ export async function generateMetadata({ searchParams }: any) {
     const data = await getMovieData(slug);
     const movie = data?.movie;
     if (!movie?.name) return { title: "Xem phim | Rạp Phim Chill" };
-    const watchUrl = `https://rapphimchill.pro/watch?slug=${slug}`;
-    const canonicalUrl = `https://rapphimchill.pro/phim/${slug}`;
+    const watchUrl = `https://rapphimchill.app/watch?slug=${slug}`;
+    const canonicalUrl = `https://rapphimchill.app/phim/${slug}`;
     
     const posterUrl = movie.poster_url?.startsWith("http") 
       ? movie.poster_url 
@@ -83,7 +83,7 @@ export default async function WatchPage({ searchParams }: any) {
 
   const structuredBreadcrumbItems = breadcrumbItems.map(item => ({
     name: item.name,
-    url: `https://rapphimchill.pro${item.url}`
+    url: `https://rapphimchill.app${item.url}`
   }));
 
   return (
@@ -91,7 +91,7 @@ export default async function WatchPage({ searchParams }: any) {
       {/* Structured Data */}
       <MovieStructuredData
         movie={movie}
-        url={`https://rapphimchill.pro/watch?slug=${slug}`}
+        url={`https://rapphimchill.app/watch?slug=${slug}`}
       />
       <BreadcrumbStructuredData items={structuredBreadcrumbItems} />
 

@@ -1,5 +1,5 @@
 export default function robots() {
-  const baseUrl = process.env.BASE_URL || "https://rapphimchill.pro";
+  const baseUrl = process.env.BASE_URL || "https://rapphimchill.app";
 
   return {
     rules: [

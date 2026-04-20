@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         description: movie.content?.substring(0, 200),
         images: [{ url: posterUrl, width: 300, height: 450, alt: movie.name }],
       },
-      alternates: { canonical: `https://rapphimchill.pro/phim/${slug}` },
+      alternates: { canonical: `https://rapphimchill.app/phim/${slug}` },
     };
   } catch {
     return { title: "Phim | Rạp Phim Chill" };
@@ -228,11 +228,11 @@ export default async function PhimDetailPage({ params }: { params: Promise<{ slu
       </div>
 
       {/* SEO structured data */}
-      <MovieStructuredData movie={movie} url={`https://rapphimchill.pro/phim/${slug}`} />
+      <MovieStructuredData movie={movie} url={`https://rapphimchill.app/phim/${slug}`} />
       <BreadcrumbStructuredData
         items={[
-          { name: "Trang Chủ", url: "https://rapphimchill.pro" },
-          { name: movie.name, url: `https://rapphimchill.pro/phim/${slug}` },
+          { name: "Trang Chủ", url: "https://rapphimchill.app" },
+          { name: movie.name, url: `https://rapphimchill.app/phim/${slug}` },
         ]}
       />
 

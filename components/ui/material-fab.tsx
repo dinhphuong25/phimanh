@@ -140,7 +140,7 @@ export function SupportFAB({
   href?: string;
   label?: string;
 }) {
-  const supportHref = href || process.env.NEXT_PUBLIC_SUPPORT_URL || 'mailto:support@rapphimchill.pro';
+  const supportHref = href || process.env.NEXT_PUBLIC_SUPPORT_URL || 'mailto:support@rapphimchill.app';
 
   return (
     <MaterialRipple>

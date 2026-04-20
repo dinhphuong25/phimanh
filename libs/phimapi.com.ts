@@ -8,7 +8,7 @@ export default class PhimApi {
     const url = `${this.apiUrl}/phim/${slug}`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://rapphimchill.pro",
+        Referer: "https://rapphimchill.app",
         "User-Agent": "phimanh-bot/2.0",
       },
       next: { revalidate: 3600 }, // Cache movie details for 1 hour để giảm tải server
@@ -42,7 +42,7 @@ export default class PhimApi {
     const url = `${this.apiUrl}/the-loai`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://rapphimchill.pro",
+        Referer: "https://rapphimchill.app",
         "User-Agent": "phimanh-bot/2.0",
       },
       next: { revalidate: 86400 }, // Cache categories for 24 hours
@@ -56,7 +56,7 @@ export default class PhimApi {
     const url = `${this.apiUrl}/quoc-gia`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://rapphimchill.pro",
+        Referer: "https://rapphimchill.app",
         "User-Agent": "phimanh-bot/2.0",
       },
       next: { revalidate: 86400 }, // Cache countries for 24 hours
@@ -84,7 +84,7 @@ export default class PhimApi {
     const url = `${this.apiUrl}/danh-sach/phim-moi-cap-nhat-v2?page=${index}&limit=20`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://rapphimchill.pro",
+        Referer: "https://rapphimchill.app",
         "User-Agent": "phimanh-bot/2.0",
       },
       next: { revalidate: 120 }, // Phim mới cập nhật liên tục: cache 2 phút
@@ -98,7 +98,7 @@ export default class PhimApi {
     const url = `${this.apiUrl}/v1/api/tim-kiem?keyword=${query}&limit=20&page=${index}`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://rapphimchill.pro",
+        Referer: "https://rapphimchill.app",
         "User-Agent": "phimanh-bot/2.0",
       },
       next: { revalidate: 3600 }, // Cache search queries for 1 hour
@@ -121,7 +121,7 @@ export default class PhimApi {
     const url = `${this.apiUrl}/v1/api/the-loai/${slug}?page=${index}&limit=20`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://rapphimchill.pro",
+        Referer: "https://rapphimchill.app",
         "User-Agent": "phimanh-bot/2.0",
       },
       next: { revalidate: 3600 }, // Cache category pages for 1 hour
@@ -135,7 +135,7 @@ export default class PhimApi {
     const url = `${this.apiUrl}/v1/api/danh-sach/${slug}?page=${index}&limit=20`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://rapphimchill.pro",
+        Referer: "https://rapphimchill.app",
         "User-Agent": "phimanh-bot/2.0",
       },
       next: { revalidate: 3600 }, // Cache topic pages for 1 hour
@@ -149,7 +149,7 @@ export default class PhimApi {
     const url = `${this.apiUrl}/v1/api/danh-sach/${slug}?page=1&limit=${limit}`;
     const response = await fetch(url, {
       headers: {
-        Referer: "https://rapphimchill.pro",
+        Referer: "https://rapphimchill.app",
         "User-Agent": "phimanh-bot/2.0",
       },
       next: { revalidate: 3600 }, // Cache topic items (trang chủ) 1 tiếng
@@ -191,7 +191,7 @@ export default class PhimApi {
 
     const response = await fetch(url, {
       headers: {
-        Referer: "https://rapphimchill.pro",
+        Referer: "https://rapphimchill.app",
         "User-Agent": "phimanh-bot/2.0",
       },
       next: { revalidate: 900 }, // Cache filtered list for 15 mins
