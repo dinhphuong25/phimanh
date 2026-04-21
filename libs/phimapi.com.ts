@@ -128,7 +128,13 @@ export default class PhimApi {
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();
-    return [data.data.items, data.data.params.pagination];
+    const cdnDomain = data?.data?.APP_DOMAIN_CDN_IMAGE || "https://phimimg.com";
+    const items = data.data.items.map((item: any) => ({
+      ...item,
+      thumb_url: item.thumb_url?.startsWith("http") ? item.thumb_url : `${cdnDomain}/${item.thumb_url}`,
+      poster_url: item.poster_url?.startsWith("http") ? item.poster_url : `${cdnDomain}/${item.poster_url}`
+    }));
+    return [items, data.data.params.pagination];
   }
 
   async byTopic(slug: string, index: number = 1): Promise<any> {
@@ -142,7 +148,13 @@ export default class PhimApi {
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();
-    return [data.data.items, data.data.params.pagination];
+    const cdnDomain = data?.data?.APP_DOMAIN_CDN_IMAGE || "https://phimimg.com";
+    const items = data.data.items.map((item: any) => ({
+      ...item,
+      thumb_url: item.thumb_url?.startsWith("http") ? item.thumb_url : `${cdnDomain}/${item.thumb_url}`,
+      poster_url: item.poster_url?.startsWith("http") ? item.poster_url : `${cdnDomain}/${item.poster_url}`
+    }));
+    return [items, data.data.params.pagination];
   }
 
   async getTopicItems(slug: string, limit: number = 6): Promise<any[]> {
@@ -156,7 +168,13 @@ export default class PhimApi {
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();
-    return data.data.items.slice(0, limit);
+    const cdnDomain = data?.data?.APP_DOMAIN_CDN_IMAGE || "https://phimimg.com";
+    const items = data.data.items.slice(0, limit).map((item: any) => ({
+      ...item,
+      thumb_url: item.thumb_url?.startsWith("http") ? item.thumb_url : `${cdnDomain}/${item.thumb_url}`,
+      poster_url: item.poster_url?.startsWith("http") ? item.poster_url : `${cdnDomain}/${item.poster_url}`
+    }));
+    return items;
   }
 
   async getFilteredList(params: {
@@ -198,6 +216,12 @@ export default class PhimApi {
     });
     if (!response.ok) throw new Error("API error: " + response.status);
     const data = await response.json();
-    return [data.data.items, data.data.params.pagination];
+    const cdnDomain = data?.data?.APP_DOMAIN_CDN_IMAGE || "https://phimimg.com";
+    const items = data.data.items.map((item: any) => ({
+      ...item,
+      thumb_url: item.thumb_url?.startsWith("http") ? item.thumb_url : `${cdnDomain}/${item.thumb_url}`,
+      poster_url: item.poster_url?.startsWith("http") ? item.poster_url : `${cdnDomain}/${item.poster_url}`
+    }));
+    return [items, data.data.params.pagination];
   }
 }
