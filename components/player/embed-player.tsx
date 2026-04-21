@@ -25,7 +25,7 @@ const EmbedPlayer = ({
     };
 
     return (
-        <div className="relative bg-black rounded-lg shadow-2xl overflow-hidden group">
+        <div className="relative bg-black rounded-lg shadow-2xl overflow-hidden group w-full h-full aspect-video">
             {/* Lớp Overlay Gradient để bảo vệ nút Back luôn rõ ràng */}
             <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -40,7 +40,7 @@ const EmbedPlayer = ({
 
             <iframe
                 src={videoUrl}
-                className="w-full h-auto rounded-lg aspect-video border-0"
+                className="w-full h-full absolute inset-0 rounded-lg border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 title="Video Player"

@@ -267,7 +267,22 @@ export default function VideoPlayer({
           setIsLoading(false);
           const availableQualities = data.levels.map((l, index) => ({ height: l.height, level: index })).sort((a, b) => b.height - a.height);
           setQualities(availableQualities);
-          if (autoplay) video.play().catch(() => {});
+          
+          if (autoplay) {
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(() => {
+                // Autoplay was prevented
+                console.log("Autoplay prevented, waiting for interaction");
+                // Try muted autoplay as fallback
+                video.muted = true;
+                setIsMuted(true);
+                video.play().catch(() => {
+                   setIsLoading(false);
+                });
+              });
+            }
+          }
         });
         hls.on(HLS.Events.ERROR, (e, data) => {
           if (data.fatal) {
@@ -276,7 +291,17 @@ export default function VideoPlayer({
           }
         });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = videoUrl; video.addEventListener('loadedmetadata', () => { setIsLoading(false); if (autoplay) video.play().catch(() => {}); });
+        video.src = videoUrl; 
+        video.addEventListener('loadedmetadata', () => { 
+          setIsLoading(false); 
+          if (autoplay) {
+            video.play().catch(() => {
+              video.muted = true;
+              setIsMuted(true);
+              video.play().catch(() => {});
+            });
+          }
+        });
       }
     };
     initHls();
@@ -364,6 +389,31 @@ export default function VideoPlayer({
       document.removeEventListener('msfullscreenchange', handleFullscreenChange);
     };
   }, []);
+
+  // Initial Interaction to enable Autoplay
+  useEffect(() => {
+    const startPlay = () => {
+      const video = videoRef.current;
+      if (video && video.paused && autoplay && !isPlaying) {
+        video.play().then(() => {
+          // If successfully played after interaction, we can unmute if it was muted by fallback
+          if (video.muted) {
+            // Optional: Don't unmute automatically to avoid shocking the user
+            // video.muted = false;
+            // setIsMuted(false);
+          }
+        }).catch(() => {});
+      }
+    };
+
+    window.addEventListener('touchstart', startPlay, { once: true });
+    window.addEventListener('mousedown', startPlay, { once: true });
+    
+    return () => {
+      window.removeEventListener('touchstart', startPlay);
+      window.removeEventListener('mousedown', startPlay);
+    };
+  }, [autoplay, isPlaying]);
 
   // PiP Storage Cleanup
   useEffect(() => {
