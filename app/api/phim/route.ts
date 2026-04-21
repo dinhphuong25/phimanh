@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
     return new Response(JSON.stringify(data), {
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+        "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1200", // Cache 10p, cho phép dùng cache cũ thêm 20p khi đang revalidate
         Vary: "Accept",
       },
     });

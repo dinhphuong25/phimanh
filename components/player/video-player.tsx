@@ -281,15 +281,28 @@ export default function VideoPlayer({
         }, 1000);
       } else onEnded?.();
     };
+    const onWaiting = () => {
+      setIsLoading(true);
+      // Stall guard: Nếu xoay vòng quá 8s thì thử load lại hoặc báo lỗi
+      const stallTimeout = setTimeout(() => {
+        if (video.paused) return;
+        console.warn("Video stalled for too long, attempting recovery...");
+        if (hlsRef.current) hlsRef.current.recoverMediaError();
+        else { setError("Kết nối chậm, vui lòng thử lại hoặc đổi server."); setIsLoading(false); }
+      }, 8000);
+      video.addEventListener('playing', () => clearTimeout(stallTimeout), { once: true });
+    };
+
     video.addEventListener('timeupdate', onTimeUpdate);
     video.addEventListener('ended', onEndedEvent);
     video.addEventListener('play', () => setIsPlaying(true));
     video.addEventListener('pause', () => setIsPlaying(false));
     video.addEventListener('durationchange', () => setDuration(video.duration));
-    video.addEventListener('waiting', () => setIsLoading(true));
+    video.addEventListener('waiting', onWaiting);
     video.addEventListener('playing', () => setIsLoading(false));
     return () => {
       video.removeEventListener('timeupdate', onTimeUpdate); video.removeEventListener('ended', onEndedEvent);
+      video.removeEventListener('waiting', onWaiting);
       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     };
   }, [hasNextEpisode, onNextEpisode, onEnded, onProgress]);
