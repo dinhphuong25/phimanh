@@ -76,6 +76,13 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning className="dark">
       <head>
+        {/* PWA */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#dc2626" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Phim Chill" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
         {/* DNS Preconnect — giảm độ trễ kết nối tới các domain ngoài */}
         <link rel="preconnect" href="https://phimimg.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://phimapi.com" crossOrigin="anonymous" />

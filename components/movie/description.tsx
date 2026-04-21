@@ -42,7 +42,6 @@ export default function Description({ movie, serverData }: any) {
     episode: number;
   } | null>(null);
   const [playerMode, setPlayerMode] = useState<'m3u8' | 'embed'>('m3u8');
-  const [isTheaterMode, setIsTheaterMode] = useState(false);
 
   const getEpisodeProgressKey = useCallback((serverIndex: number, episodeIndex: number) => {
     return `watchProgress_${movie.slug}_${serverIndex}_${episodeIndex}`;
@@ -285,23 +284,10 @@ export default function Description({ movie, serverData }: any) {
   };
 
   return (
-    <div className={cn("w-full flex-col max-w-[1450px] mx-auto py-4 md:py-6 px-3 sm:px-4 lg:px-6 gap-6 md:gap-8 flex z-10 relative", isTheaterMode ? "" : "overflow-x-hidden")}>
-      {/* Theater Mode Overlay (Tắt đèn) */}
-      {isTheaterMode && (
-        <div 
-          className="fixed inset-0 bg-black/95 z-[40] transition-opacity duration-500 ease-in-out"
-          onClick={() => setIsTheaterMode(false)}
-        />
-      )}
+    <div className="w-full flex-col max-w-[1450px] mx-auto py-4 md:py-6 px-3 sm:px-4 lg:px-6 gap-6 md:gap-8 flex z-10 relative overflow-x-hidden">
 
-      <div className={cn(
-        "grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 items-start z-20 transition-all duration-500", 
-        isTheaterMode ? "fixed top-[5vh] left-1/2 -translate-x-1/2 w-full max-w-[1500px] px-4 z-[50]" : ""
-      )}>
-        <Card className={cn(
-          "lg:col-span-8 xl:col-span-9 border-0 overflow-hidden shadow-2xl ring-1 ring-white/10 w-full aspect-video transition-all duration-500 ease-in-out", 
-          isTheaterMode ? "bg-black scale-[1.02] shadow-[0_0_50px_rgba(0,0,0,0.8)] ring-primary/20 lg:col-span-12 xl:col-span-12" : "rounded-xl lg:rounded-2xl bg-black/90"
-        )}>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 items-start z-20">
+        <Card className="lg:col-span-8 xl:col-span-9 border-0 overflow-hidden shadow-2xl ring-1 ring-white/10 w-full aspect-video rounded-xl lg:rounded-2xl bg-black/90">
           <CardContent className="p-0 h-full w-full">
             {playerMode === 'm3u8' ? (
               <VideoPlayer
@@ -323,8 +309,6 @@ export default function Description({ movie, serverData }: any) {
                 }}
                 hasNextEpisode={hasNextEpisode()}
                 onNextEpisode={handleNextEpisode}
-                isTheaterMode={isTheaterMode}
-                onToggleTheaterMode={() => setIsTheaterMode(!isTheaterMode)}
                 onEnded={() => {
                   clearEpisodeProgress(currentEpisodeIndex?.server || 0, currentEpisodeIndex?.episode || 0);
                   if (!hasNextEpisode()) {
@@ -496,6 +480,6 @@ export default function Description({ movie, serverData }: any) {
       </div>
 
 
-    </div >
+    </div>
   );
 }

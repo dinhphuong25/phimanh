@@ -1,32 +1,47 @@
-import { Clapperboard } from "lucide-react";
-
 export default function Loading() {
   return (
-    <main className="min-h-screen bg-[#09090b] flex items-center justify-center fixed inset-0 z-[100]">
-      <div className="flex flex-col items-center justify-center text-center">
-        <div className="relative flex items-center justify-center w-24 h-24 mb-6">
-          {/* Hiệu ứng tỏa sáng xung quanh */}
-          <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" style={{ animationDuration: "2s" }}></div>
-          
-          {/* Vòng xoay ngoại */}
-          <div className="absolute inset-2 rounded-full border-2 border-white/10 border-t-primary animate-spin" style={{ animationDuration: "1.5s" }}></div>
-          
-          {/* Vòng xoay nội */}
-          <div className="absolute inset-4 rounded-full border-2 border-white/5 border-b-primary animate-spin" style={{ animationDuration: "2s", animationDirection: "reverse" }}></div>
-          
-          {/* Icon Rạp chiếu phim ở giữa */}
-          <Clapperboard className="w-8 h-8 text-primary animate-pulse" />
+    <main className="min-h-screen bg-[#09090b] pt-20">
+      {/* Hero skeleton */}
+      <div className="relative w-full h-[60vh] bg-zinc-900 overflow-hidden">
+        <div className="absolute inset-0 shimmer-bg" />
+        <div className="absolute bottom-12 left-6 sm:left-10 space-y-4 w-2/3 max-w-lg z-10">
+          <div className="h-4 w-24 bg-white/8 rounded-full" />
+          <div className="h-10 w-4/5 bg-white/10 rounded-xl" />
+          <div className="h-4 w-3/5 bg-white/6 rounded-lg" />
+          <div className="flex gap-3 pt-2">
+            <div className="h-10 w-28 bg-primary/15 rounded-full" />
+            <div className="h-10 w-28 bg-white/8 rounded-full" />
+          </div>
         </div>
-        
-        <div className="space-y-2">
-          <h2 className="text-xl font-bold text-white tracking-wide">
-            Đang chuẩn bị rạp phim...
-          </h2>
-          <p className="text-sm text-white/40">
-            Trải nghiệm điện ảnh sắp bắt đầu
-          </p>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-transparent to-transparent" />
+      </div>
+
+      {/* Movie grid skeleton */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-1.5 h-7 bg-primary/40 rounded-full" />
+          <div className="h-5 w-32 bg-white/10 rounded-lg" />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="aspect-[2/3] bg-zinc-900 rounded-xl overflow-hidden">
+              <div className="w-full h-full shimmer-bg" />
+            </div>
+          ))}
         </div>
       </div>
+
+      <style>{`
+        .shimmer-bg {
+          background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.04) 50%, transparent 70%);
+          background-size: 200% 100%;
+          animation: loadShimmer 1.5s linear infinite;
+        }
+        @keyframes loadShimmer {
+          0%   { background-position: -200% 0; }
+          100% { background-position:  200% 0; }
+        }
+      `}</style>
     </main>
   );
 }

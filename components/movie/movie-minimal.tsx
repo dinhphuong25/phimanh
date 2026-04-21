@@ -23,7 +23,7 @@ export default memo(function MovieMinimalCard({ movie }: MovieMinimalProps) {
       className="block h-full w-full text-left group"
       prefetch={false}
     >
-      <div className="relative h-full w-full overflow-hidden rounded-xl bg-neutral-900 border border-white/5 transition-transform duration-300 hover:scale-[1.02] aspect-[2/3]">
+      <div className="relative h-full w-full overflow-hidden rounded-xl bg-neutral-900 border border-white/5 transition-all duration-300 ease-out hover:scale-[1.03] hover:border-primary/30 hover:shadow-[0_0_25px_rgba(251,191,36,0.15)] aspect-[2/3] will-change-transform">
         {/* Skeleton */}
         <div className="absolute inset-0 bg-neutral-900 animate-pulse -z-10" />
 

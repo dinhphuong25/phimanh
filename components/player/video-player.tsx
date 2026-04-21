@@ -44,8 +44,6 @@ interface VideoPlayerProps {
   onProgress?: (currentTime: number, duration: number) => void;
   hasNextEpisode?: boolean;
   onNextEpisode?: () => void;
-  isTheaterMode?: boolean;
-  onToggleTheaterMode?: () => void;
   movieName?: string;
   movieSlug?: string;
 }
@@ -72,8 +70,6 @@ const VideoPlayer = ({
   onProgress,
   hasNextEpisode,
   onNextEpisode,
-  isTheaterMode,
-  onToggleTheaterMode,
   movieName,
   movieSlug,
 }: VideoPlayerProps) => {
@@ -984,10 +980,67 @@ const VideoPlayer = ({
           </div>
 
           {/* Right Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
 
 
-            <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-white hover:bg-white/20" aria-label={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>
+            {/* Playback Speed */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-white/20 w-auto px-2 text-xs font-bold"
+                  aria-label="Tốc độ phát"
+                >
+                  {playbackRate === 1 ? '1x' : `${playbackRate}x`}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" className="bg-black/90 border-white/10 text-white min-w-[120px]">
+                <DropdownMenuLabel className="text-white/60 text-xs">Tốc độ phát</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-white/10" />
+                <DropdownMenuRadioGroup value={String(playbackRate)} onValueChange={(v) => handlePlaybackRateChange(Number(v))}>
+                  {[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map((rate) => (
+                    <DropdownMenuRadioItem key={rate} value={String(rate)} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer">
+                      {rate === 1 ? 'Bình thường (1x)' : `${rate}x`}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Quality Selector */}
+            {qualities.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-white/20 w-auto px-2 text-xs font-bold"
+                    aria-label="Chất lượng video"
+                  >
+                    {quality === -1
+                      ? 'Auto'
+                      : `${qualities.find((q) => q.level === quality)?.height || '?'}p`}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="top" className="bg-black/90 border-white/10 text-white min-w-[140px]">
+                  <DropdownMenuLabel className="text-white/60 text-xs">Chất lượng</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuRadioGroup value={String(quality)} onValueChange={(v) => handleQualityChange(Number(v))}>
+                    <DropdownMenuRadioItem value="-1" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer">
+                      Tự động (Auto)
+                    </DropdownMenuRadioItem>
+                    {qualities.map((q) => (
+                      <DropdownMenuRadioItem key={q.level} value={String(q.level)} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer">
+                        {q.height}p {q.height >= 1080 ? '🔥' : q.height >= 720 ? '✨' : ''}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-white hover:bg-white/20 w-8 h-8" aria-label={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>
               {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
             </Button>
           </div>

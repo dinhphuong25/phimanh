@@ -99,8 +99,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         {/* Advanced Filter */}
         <div className="mb-8">
           <AdvancedSearchFilter 
-            categories={categories?.data || []}
-            countries={countries?.data || []}
+            categories={Array.isArray(categories) ? categories : (categories?.data || [])}
+            countries={Array.isArray(countries) ? countries : (countries?.data || [])}
           />
         </div>
 
