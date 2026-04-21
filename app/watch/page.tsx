@@ -59,11 +59,21 @@ export async function generateMetadata({ searchParams }: any) {
   }
 }
 
+import { LoadingWatch } from "@/components/ui/page-loaders";
+
 export default async function WatchPage({ searchParams }: any) {
   const { slug } = await searchParams;
 
   if (!slug || HIDDEN_MOVIE_SLUGS.includes(slug)) notFound();
 
+  return (
+    <Suspense fallback={<LoadingWatch />}>
+      <WatchContent slug={slug} />
+    </Suspense>
+  );
+}
+
+async function WatchContent({ slug }: { slug: string }) {
   let movie: any, server: any;
   try {
     const data = await getMovieData(slug);
@@ -98,7 +108,6 @@ export default async function WatchPage({ searchParams }: any) {
       <BreadcrumbStructuredData items={structuredBreadcrumbItems} />
 
       <main className="relative w-full">
-        {/* Cinematic Background effect only behind the player area */}
         <div
           className="absolute top-0 left-0 right-0 h-[60vh] md:h-[80vh] z-0 opacity-40 pointer-events-none"
           style={{
@@ -115,8 +124,6 @@ export default async function WatchPage({ searchParams }: any) {
 
         <div className="relative z-10 w-full">
           <Description movie={movie} serverData={server} slug={slug} thumb_url={movie.thumb_url} />
-
-
         </div>
       </main>
     </div>

@@ -44,11 +44,21 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
+import { LoadingMovieDetail } from "@/components/ui/page-loaders";
+
 export default async function PhimDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
   if (HIDDEN_MOVIE_SLUGS.includes(slug)) notFound();
 
+  return (
+    <Suspense fallback={<LoadingMovieDetail />}>
+      <PhimDetailContent slug={slug} />
+    </Suspense>
+  );
+}
+
+async function PhimDetailContent({ slug }: { slug: string }) {
   let movie: any, episodes: any[];
   try {
     const data = await getMovie(slug);

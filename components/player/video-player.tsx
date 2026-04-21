@@ -227,7 +227,18 @@ export default function VideoPlayer({
     setError(null); setIsLoading(true);
     const initHls = () => {
       if (HLS.isSupported()) {
-        const hls = new HLS({ enableWorker: true, lowLatencyMode: true, startLevel: -1 });
+        const hls = new HLS({
+          enableWorker: true,
+          lowLatencyMode: true,
+          backBufferLength: 60,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 600,
+          maxBufferSize: 60 * 1000 * 1000,
+          startLevel: -1,
+          abrEwmaFastLive: 2.0,
+          abrEwmaSlowLive: 9.0,
+          testBandwidth: true,
+        });
         hls.loadSource(videoUrl); hls.attachMedia(video); hlsRef.current = hls;
         hls.on(HLS.Events.MANIFEST_PARSED, (e, data) => {
           setIsLoading(false);
