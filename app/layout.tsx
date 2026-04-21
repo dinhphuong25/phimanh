@@ -15,6 +15,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import SecurityGuard from "@/components/ui/security-guard";
 import PipWrapper from "@/components/player/pip-wrapper";
 import NotificationBanner from "@/components/ui/notification-banner";
+import SpeculationRules from "@/components/seo/speculation-rules";
 import { Toaster } from "sonner";
 
 // Chỉ load 1 font thay vì 3 — giảm 60% thời gian font download
@@ -166,6 +167,7 @@ export default function RootLayout({
         <PipWrapper />
         {/* PWA Notification prompt */}
         <NotificationBanner />
+        <SpeculationRules />
         <Toaster position="top-right" richColors expand={true} closeButton theme="dark" />
       </body>
     </html>
