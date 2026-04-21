@@ -1,76 +1,91 @@
 import { MetadataRoute } from "next";
 import PhimApi from "@/libs/phimapi.com";
 
+export const revalidate = 3600; // Re-generate sitemap every hour
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://rapphimchill.app"; // Unified base URL
+  const baseUrl = "https://rapphimchill.app";
   const api = new PhimApi();
 
   try {
-    const [newMovies] = await api.newAdding();
+    // Fetch multiple pages of movies for comprehensive coverage
+    const [page1] = await api.newAdding(1);
+    const [page2] = await api.newAdding(2);
+    const [page3] = await api.newAdding(3);
+    const [page4] = await api.newAdding(4);
+    const [page5] = await api.newAdding(5);
+    const allMovies = [...page1, ...page2, ...page3, ...page4, ...page5];
+
     const categories = await api.listCategories();
     const topics = api.listTopics();
 
-    // Main site routes with optimized priorities
-    const routes = [
+    // Core pages — highest priority
+    const routes: MetadataRoute.Sitemap = [
       {
         url: baseUrl,
         lastModified: new Date(),
-        changeFrequency: "daily" as const,
+        changeFrequency: "daily",
         priority: 1.0,
       },
       {
         url: `${baseUrl}/search`,
         lastModified: new Date(),
-        changeFrequency: "weekly" as const,
+        changeFrequency: "weekly",
         priority: 0.8,
       },
       {
         url: `${baseUrl}/new-updates`,
         lastModified: new Date(),
-        changeFrequency: "daily" as const,
+        changeFrequency: "daily",
         priority: 0.9,
+      },
+      {
+        url: `${baseUrl}/favorites`,
+        lastModified: new Date(),
+        changeFrequency: "weekly",
+        priority: 0.6,
       },
       {
         url: `${baseUrl}/recently`,
         lastModified: new Date(),
-        changeFrequency: "daily" as const,
+        changeFrequency: "daily",
         priority: 0.7,
       },
     ];
 
-    // Topic routes - important for SEO
-    const topicRoutes = topics.map((topic: any) => ({
+    // Topic pages — important for category SEO
+    const topicRoutes: MetadataRoute.Sitemap = topics.map((topic: any) => ({
       url: `${baseUrl}/?topic=${topic.slug}`,
       lastModified: new Date(),
       changeFrequency: "daily" as const,
       priority: 0.8,
     }));
 
-    // Category routes - important for SEO
-    const categoryRoutes = categories.map((category: any) => ({
+    // Category pages
+    const categoryList = Array.isArray(categories) ? categories : (categories?.data || []);
+    const categoryRoutes: MetadataRoute.Sitemap = categoryList.map((category: any) => ({
       url: `${baseUrl}/?category=${category.slug}`,
       lastModified: new Date(),
       changeFrequency: "daily" as const,
       priority: 0.8,
     }));
 
-    // Movie routes - limit to recent movies for better performance
-    const movieRoutes = newMovies.slice(0, 1000).map((movie: any) => ({
+    // Movie detail pages — each movie gets indexed
+    const movieRoutes: MetadataRoute.Sitemap = allMovies.map((movie: any) => ({
       url: `${baseUrl}/phim/${movie.slug}`,
       lastModified: movie.modified_time ? new Date(movie.modified_time) : new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.6,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
     }));
 
     return [...routes, ...topicRoutes, ...categoryRoutes, ...movieRoutes];
   } catch (error) {
     console.error('Error generating sitemap:', error);
-    // Return basic sitemap if API fails
     return [
       {
         url: baseUrl,
         lastModified: new Date(),
-        changeFrequency: "daily" as const,
+        changeFrequency: "daily",
         priority: 1.0,
       },
     ];

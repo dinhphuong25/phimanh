@@ -114,8 +114,10 @@ export function WebsiteStructuredData({ url, name = "Rạp Phim Chill", descript
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": name,
+    "alternateName": ["Rap Phim Chill", "RapPhimChill", "rapphimchill.app"],
     "url": url,
-    "description": description || "Kho phim ảnh HD chất lượng cao với hơn 50,000+ bộ phim thuộc mọi thể loại.",
+    "description": description || "Rạp Phim Chill - Trang xem phim online HD miễn phí hàng đầu Việt Nam. Kho 50,000+ phim bộ, phim lẻ, anime vietsub mới nhất 2026.",
+    "inLanguage": "vi-VN",
     "potentialAction": {
       "@type": "SearchAction",
       "target": `${url}/search?query={search_term_string}`,

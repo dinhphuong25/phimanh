@@ -14,6 +14,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import SecurityGuard from "@/components/ui/security-guard";
 import PipWrapper from "@/components/player/pip-wrapper";
+import NotificationBanner from "@/components/ui/notification-banner";
 
 // Chỉ load 1 font thay vì 3 — giảm 60% thời gian font download
 const inter = Inter({
@@ -26,20 +27,21 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Rạp Phim Chill - Xem phim HD chất lượng cao miễn phí 2024",
+    default: "Rạp Phim Chill - Xem Phim Online HD Miễn Phí Mới Nhất 2026",
     template: "%s | Rạp Phim Chill",
   },
-  description: "Kho phim ảnh HD chất lượng cao với hơn 50,000+ bộ phim thuộc mọi thể loại. Xem phim online miễn phí, cập nhật phim mới nhất 2024 hàng ngày.",
+  description: "Rạp Phim Chill (rapphimchill.app) - Trang xem phim online HD miễn phí tốc độ cao #1 Việt Nam. Kho 50,000+ phim bộ, phim lẻ, anime vietsub mới nhất 2026. Cập nhật hàng ngày, không quảng cáo.",
   keywords: [
-    "phim ảnh", "xem phim HD", "phim chất lượng cao", "phim miễn phí 2024", "phim mới nhất",
-    "phim bộ Trung Quốc", "phim Hàn Quốc", "phim Thái Lan", "anime vietsub",
-    "phim lẻ chiếu rạp", "phim hành động", "phim tình cảm", "phim kinh dị",
-    "xem phim online", "phim hay 2024", "phimanhd",
+    "rạp phim chill", "rap phim chill", "rapphimchill", "xem phim online",
+    "phim HD miễn phí", "phim mới nhất 2026", "phim bộ hay", "phim lẻ chiếu rạp",
+    "anime vietsub", "phim Hàn Quốc", "phim Trung Quốc", "phim Thái Lan",
+    "phim hành động", "phim tình cảm", "phim kinh dị", "xem phim HD",
+    "phim hay", "phim chất lượng cao", "phim vietsub", "phim thuyết minh",
   ],
   metadataBase: new URL("https://rapphimchill.app"),
   openGraph: {
-    title: "Rạp Phim Chill - Kho phim HD chất lượng cao miễn phí",
-    description: "Khám phá hơn 50,000+ bộ phim HD chất lượng cao thuộc mọi thể loại.",
+    title: "Rạp Phim Chill - Xem Phim Online HD Miễn Phí #1 Việt Nam",
+    description: "Kho 50,000+ phim HD mới nhất 2026. Phim bộ, phim lẻ, anime vietsub cập nhật hàng ngày. Xem miễn phí tại rapphimchill.app",
     url: "https://rapphimchill.app",
     siteName: "Rạp Phim Chill",
     type: "website",
@@ -47,9 +49,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    site: "@phimanh",
-    title: "Rạp Phim Chill - Xem phim HD chất lượng cao miễn phí",
-    description: "Kho phim HD chất lượng cao với hơn 50,000+ bộ phim.",
+    site: "@rapphimchill",
+    title: "Rạp Phim Chill - Xem Phim Online HD Miễn Phí",
+    description: "Kho 50,000+ phim HD. Phim bộ, phim lẻ, anime vietsub mới nhất 2026.",
   },
   applicationName: "Rạp Phim Chill",
   referrer: "origin-when-cross-origin",
@@ -161,6 +163,8 @@ export default function RootLayout({
         <SpeedInsights />
         {/* Global PiP player — persist across navigation */}
         <PipWrapper />
+        {/* PWA Notification prompt */}
+        <NotificationBanner />
       </body>
     </html>
   );

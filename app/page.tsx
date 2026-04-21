@@ -51,22 +51,21 @@ export async function generateMetadata({ searchParams }: HomeProps) {
   } else if (topic) {
     postTitle = TOPICS.find((t) => t.slug === topic);
   } else if (category) {
-    // Chỉ fetch category khi filter cate có trên URL, tránh block quá trình stream Next.js
     const categories = await getCachedCategories();
     postTitle = (categories as any[]).find((c: any) => c.slug === category);
   }
 
   const titleText =
     (postTitle ? `${postTitle.name} | ` : "") +
-    "Rạp Phim Chill" +
+    "Rạp Phim Chill - Xem Phim Online HD Miễn Phí" +
     (index > 1 ? " - Trang " + index : "");
 
   return {
     title: titleText,
     description:
-      "Khám phá kho tàng phim ảnh chất lượng cao với hình ảnh và âm thanh hoàn hảo. Trải nghiệm những tác phẩm điện ảnh kinh điển với chất lượng tuyệt đỉnh.",
+      "Rạp Phim Chill - Trang xem phim online HD miễn phí hàng đầu. Kho 50,000+ phim bộ, phim lẻ, anime vietsub cập nhật mới nhất 2026. Tốc độ nhanh, không quảng cáo.",
     keywords:
-      "phim ảnh, phim chất lượng cao, phim, phim hd, phim kinh điển, phim viễn tưởng, phim kinh dị, phim bộ, anime",
+      "rạp phim chill, rap phim chill, rapphimchill, xem phim online, phim HD miễn phí, phim mới nhất, phim bộ hay, anime vietsub, phim Hàn Quốc, phim hành động",
   };
 }
 
