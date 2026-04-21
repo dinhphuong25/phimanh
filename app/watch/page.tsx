@@ -4,6 +4,8 @@ import { MovieStructuredData, BreadcrumbStructuredData } from "@/components/seo/
 import { notFound } from "next/navigation";
 import { HIDDEN_MOVIE_SLUGS } from "@/lib/hidden-movies";
 import { unstable_cache } from "next/cache";
+import MovieRecommendations from "@/components/movie/movie-recommendations";
+import { Suspense } from "react";
 
 const getMovieData = unstable_cache(
   async (slug: string) => {
@@ -113,6 +115,13 @@ export default async function WatchPage({ searchParams }: any) {
 
         <div className="relative z-10 w-full">
           <Description movie={movie} serverData={server} slug={slug} thumb_url={movie.thumb_url} />
+
+          {/* Movie Recommendations */}
+          <div className="max-w-7xl w-full mx-auto px-4 mt-12 mb-20">
+            <Suspense fallback={<div className="h-64 flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div></div>}>
+              <MovieRecommendations currentMovie={movie} />
+            </Suspense>
+          </div>
         </div>
       </main>
     </div>

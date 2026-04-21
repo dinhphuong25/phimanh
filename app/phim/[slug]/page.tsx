@@ -8,6 +8,8 @@ import { MovieStructuredData, BreadcrumbStructuredData } from "@/components/seo/
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { getCachedCategories, getCachedCountries } from "@/lib/data";
+import MovieRecommendations from "@/components/movie/movie-recommendations";
+import { Suspense } from "react";
 
 const getMovie = unstable_cache(
   async (slug: string) => {
@@ -225,6 +227,13 @@ export default async function PhimDetailPage({ params }: { params: Promise<{ slu
               </div>
             ))}
         </section>
+
+        {/* Movie Recommendations */}
+        <div className="mt-12">
+           <Suspense fallback={<div className="h-64 flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div></div>}>
+             <MovieRecommendations currentMovie={movie} />
+           </Suspense>
+        </div>
       </div>
 
       {/* SEO structured data */}

@@ -3,7 +3,7 @@
 import { useLoading } from "@/components/ui/loading-context";
 import { memo } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import OptimizedMoviePoster from "@/components/ui/optimized-movie-poster";
 
 interface MovieMinimalProps {
   movie: any;
@@ -28,15 +28,10 @@ export default memo(function MovieMinimalCard({ movie }: MovieMinimalProps) {
         <div className="absolute inset-0 bg-neutral-900 animate-pulse -z-10" />
 
         {/* Image */}
-        <Image
+        <OptimizedMoviePoster
           src={imageUrl}
           alt={movie.name}
-          fill
-          sizes="(max-width: 480px) 45vw, (max-width: 768px) 33vw, 20vw"
-          quality={50}
-          loading="lazy"
-          decoding="async"
-          className="absolute inset-0 w-full h-full object-cover"
+          priority={false}
         />
 
         {/* Overlay */}
