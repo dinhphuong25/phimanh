@@ -11,15 +11,15 @@ import {
   VolumeX,
   Maximize,
   Minimize,
-  Settings,
   ArrowLeft,
   Loader2,
   SkipForward,
   SkipBack,
   ChevronsRight,
-  ChevronsLeft
+  ChevronsLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -27,10 +27,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 
 interface VideoPlayerProps {
@@ -53,13 +50,11 @@ const formatTime = (seconds: number) => {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
-  if (h > 0) {
-    return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  }
+  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   return `${m}:${s.toString().padStart(2, '0')}`;
 };
 
-const VideoPlayer = ({
+export default function VideoPlayer({
   videoUrl,
   autoplay = true,
   poster,
@@ -72,42 +67,26 @@ const VideoPlayer = ({
   onNextEpisode,
   movieName,
   movieSlug,
-}: VideoPlayerProps) => {
+}: VideoPlayerProps) {
+  // 1. REFS (Defined at the very top)
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hlsRef = useRef<HLS | null>(null);
   const router = useRouter();
 
-  // Refs to track latest values for cleanup
   const movieNameRef = useRef(movieName);
   const movieSlugRef = useRef(movieSlug);
   const videoUrlRef = useRef(videoUrl);
   const posterRef = useRef(poster);
-  useEffect(() => { movieNameRef.current = movieName; }, [movieName]);
-  useEffect(() => { movieSlugRef.current = movieSlug; }, [movieSlug]);
-  useEffect(() => { videoUrlRef.current = videoUrl; }, [videoUrl]);
-  useEffect(() => { posterRef.current = poster; }, [poster]);
+  
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastClickTimeRef = useRef<number>(0);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastProgressSecondRef = useRef<number>(-1);
+  const didSeekInitialTimeRef = useRef<boolean>(false);
 
-  // Trigger global PiP when component unmounts with video playing
-  useEffect(() => {
-    return () => {
-      const video = videoRef.current;
-      const url = videoUrlRef.current;
-      const slug = movieSlugRef.current;
-      if (video && !video.paused && video.currentTime > 3 && url && slug) {
-        pipStore.set({
-          videoUrl: url,
-          movieName: movieNameRef.current || '',
-          movieSlug: slug,
-          poster: posterRef.current,
-          currentTime: video.currentTime,
-        });
-      }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // State
+  // 2. STATES
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
@@ -119,498 +98,26 @@ const VideoPlayer = ({
   const [error, setError] = useState<string | null>(null);
   const [buffered, setBuffered] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
-  const [quality, setQuality] = useState<number>(-1); // -1 is auto
+  const [quality, setQuality] = useState<number>(-1);
   const [qualities, setQualities] = useState<{ height: number, level: number }[]>([]);
   const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 3;
-
-  // Next episode countdown state
   const [countdown, setCountdown] = useState<number | null>(null);
-  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Double tap state
   const [skipAnimation, setSkipAnimation] = useState<{ side: 'left' | 'right', id: number } | null>(null);
-  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastClickTimeRef = useRef<number>(0);
+  const [shortcutFeedback, setShortcutFeedback] = useState<{ icon: string, text?: string, id: number } | null>(null);
 
-  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastProgressSecondRef = useRef<number>(-1);
-  const didSeekInitialTimeRef = useRef<boolean>(false);
-
-  const handleBack = () => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
-    } else {
-      router.push("/");
+  // 3. ACTIONS (Strictly defined before any useEffect)
+  const togglePlay = useCallback(() => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) videoRef.current.play().catch(() => {});
+      else videoRef.current.pause();
     }
-  };
-
-  // HLS and Video Setup
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !videoUrl || videoUrl.trim() === '') {
-      setIsLoading(false);
-      setError(null);
-      return;
-    }
-
-    setError(null);
-    setIsLoading(true);
-    setCountdown(null);
-    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-    didSeekInitialTimeRef.current = false;
-    lastProgressSecondRef.current = -1;
-
-    // Timeout for loading
-    const loadTimeout = setTimeout(() => {
-      if (isLoading) {
-        console.error('Video load timeout');
-        setError('Không thể tải video. Vui lòng thử chế độ Embed.');
-        setIsLoading(false);
-      }
-    }, 30000); // 30 seconds timeout
-
-    const initHls = () => {
-      if (HLS.isSupported()) {
-        const hls = new HLS({
-          // === FAST STARTUP - Load video quickly ===
-          enableWorker: true,              // Use web worker for better performance
-          lowLatencyMode: true,            // Enable low latency streaming
-          
-          // Allow aggressive buffering for high quality video 
-          maxBufferLength: 30,             // Tăng buffer lên 30s để gánh chất lượng cao
-          maxBufferSize: 120 * 1000 * 1000, // Tăng gấp đôi lên 120MB buffer chống lag cho độ phân giải 1080p/4K
-          maxBufferHole: 0.1,              // Giảm lỗ hổng đệm để video mượt mượt
-          
-          // === AGGRESSIVE QUALITY SELECTION ===
-          startLevel: -1,                  // Auto-detect best quality immediately
-          abrEwmaDefaultEstimate: 50000000, // Assume 50 Mbps - favor maximum quality immediately
-          abrBandWidthFactor: 0.95,        // Very conservative downgrades (keep quality as high as possible)
-          abrBandWidthUpFactor: 0.4,       // Aggressive upgrades to best quality
-          abrEwmaFastLive: 1,              // Extremely Fast adaptation to higher quality
-          abrEwmaSlowLive: 3,              // Quick response to bandwidth changes
-          
-          // === MAX QUALITY SETTINGS ===
-          capLevelToPlayerSize: false,     // Allow 4K even on smaller screens
-          maxLoadingDelay: 2,              // Reduce wait time for best quality
-          minAutoBitrate: 1000000,         // Minimum 1 Mbps (720p/1080p fallback)
-          
-          // === SMOOTH SEEKING & LOADING ===
-          startFragPrefetch: true,         // Preload next fragment immediately
-          maxFragLookUpTolerance: 0.2,     // Better seeking precision
-          progressive: true,               // Progressive download for faster start
-          
-          // === BUFFER OPTIMIZATION ===
-          backBufferLength: 20,            // Keep 20s back buffer for rewind
-          frontBufferFlushThreshold: 600,  // 10 minutes forward buffer max
-          
-          // === RELIABILITY - More retries for stable playback ===
-          manifestLoadingMaxRetry: 8,
-          manifestLoadingRetryDelay: 500,
-          levelLoadingMaxRetry: 8,
-          levelLoadingRetryDelay: 500,
-          fragLoadingMaxRetry: 8,
-          fragLoadingRetryDelay: 500,
-          
-          // === FAST RECOVERY ===
-          manifestLoadingTimeOut: 10000,   // 10s timeout for manifest
-          levelLoadingTimeOut: 10000,      // 10s timeout for level
-          fragLoadingTimeOut: 20000,       // 20s timeout for fragments
-        });
-        hls.loadSource(videoUrl);
-        hls.attachMedia(video);
-        hlsRef.current = hls;
-
-        hls.on(HLS.Events.MANIFEST_PARSED, (event, data) => {
-          console.log("Manifest parsed", data);
-          clearTimeout(loadTimeout);
-          setIsLoading(false);
-
-          // Get available qualities
-          const availableQualities = data.levels.map((l, index) => ({
-            height: l.height,
-            level: index
-          })).sort((a, b) => b.height - a.height);
-          setQualities(availableQualities);
-          
-          // Ưu tiên ép load phân giải cao nhất mặc định (Highest quality)
-          if (availableQualities.length > 0) {
-            hls.nextLevel = availableQualities[0].level;
-            hls.currentLevel = availableQualities[0].level;
-          }
-
-          if (autoplay) {
-            video.play().catch((e) => {
-              if (e.name !== 'AbortError') console.error('Autoplay failed:', e);
-            });
-          }
-        });
-
-        hls.on(HLS.Events.ERROR, (event, data) => {
-          if (data.fatal) {
-            console.error('HLS Fatal Error:', data);
-            clearTimeout(loadTimeout);
-            switch (data.type) {
-              case HLS.ErrorTypes.NETWORK_ERROR:
-                if (retryCount < maxRetries) {
-                  console.error(`Network error, retrying... (${retryCount + 1}/${maxRetries})`);
-                  setRetryCount(prev => prev + 1);
-                  setTimeout(() => hls.startLoad(), 1000);
-                } else {
-                  setError("Lỗi mạng. Đang chuyển sang chế độ Dự phòng...");
-                  setIsLoading(false);
-                  setTimeout(() => onSwitchToEmbed?.(), 1500);
-                }
-                break;
-              case HLS.ErrorTypes.MEDIA_ERROR:
-                if (retryCount < maxRetries) {
-                  console.error(`Media error, recovering... (${retryCount + 1}/${maxRetries})`);
-                  setRetryCount(prev => prev + 1);
-                  hls.recoverMediaError();
-                } else {
-                  setError("Lỗi media. Đang chuyển sang chế độ Dự phòng...");
-                  setIsLoading(false);
-                  setTimeout(() => onSwitchToEmbed?.(), 1500);
-                }
-                break;
-              default:
-                setError("Không thể tải video. Vui lòng thử chế độ Dự phòng.");
-                setIsLoading(false);
-                onError?.(data);
-                break;
-            }
-          }
-        });
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = videoUrl;
-        
-        const removeLoading = () => {
-          clearTimeout(loadTimeout);
-          setIsLoading(false);
-        };
-
-        video.addEventListener('loadedmetadata', () => {
-          removeLoading();
-          if (autoplay) {
-            video.play().catch(e => console.warn('Autoplay blocked native:', e));
-          }
-        });
-        
-        // Cứu cánh cho Safari Mobile: Safari hay suspend video trước khi tải xong metadata
-        video.addEventListener('suspend', removeLoading);
-        video.addEventListener('canplay', removeLoading);
-        
-        video.addEventListener('error', () => {
-          clearTimeout(loadTimeout);
-          setError("Không thể tải video. Vui lòng thử chế độ Embed.");
-          setIsLoading(false);
-        });
-
-        // Bắt đầu ép load ngay lập tức
-        video.load();
-      } else {
-        clearTimeout(loadTimeout);
-        setError("Trình duyệt không hỗ trợ phát video này. Vui lòng thử chế độ Embed.");
-        setIsLoading(false);
-      }
-    };
-
-    initHls();
-
-    return () => {
-      clearTimeout(loadTimeout);
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-      video.src = '';
-    };
-  }, [videoUrl, autoplay, onError]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !videoUrl || initialTime <= 0) return;
-
-    const seekToInitialTime = () => {
-      if (didSeekInitialTimeRef.current || !video.duration || Number.isNaN(video.duration)) return;
-      const safeTime = Math.min(initialTime, Math.max(video.duration - 3, 0));
-      if (safeTime > 0 && Math.abs(video.currentTime - safeTime) > 2) {
-        video.currentTime = safeTime;
-      }
-      didSeekInitialTimeRef.current = true;
-    };
-
-    video.addEventListener('loadedmetadata', seekToInitialTime);
-    video.addEventListener('canplay', seekToInitialTime);
-
-    const fallbackTimeout = setTimeout(seekToInitialTime, 1500);
-
-    return () => {
-      clearTimeout(fallbackTimeout);
-      video.removeEventListener('loadedmetadata', seekToInitialTime);
-      video.removeEventListener('canplay', seekToInitialTime);
-    };
-  }, [videoUrl, initialTime]);
-
-  // Event Listeners
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const onPlay = () => {
-      setIsPlaying(true);
-      setIsLoading(false);
-    };
-    const onPause = () => setIsPlaying(false);
-    const onCanPlay = () => setIsLoading(false);
-    const onTimeUpdate = () => {
-      setCurrentTime(video.currentTime);
-      if (video.buffered.length > 0) {
-        setBuffered(video.buffered.end(video.buffered.length - 1));
-      }
-
-      const currentSecond = Math.floor(video.currentTime);
-      if (currentSecond !== lastProgressSecondRef.current) {
-        lastProgressSecondRef.current = currentSecond;
-        onProgress?.(video.currentTime, video.duration || 0);
-      }
-    };
-    const onDurationChange = () => setDuration(video.duration);
-    const onWaiting = () => setIsLoading(true);
-    const onPlaying = () => setIsLoading(false);
-    const onEndedEvent = () => {
-      setIsPlaying(false);
-      
-      if (hasNextEpisode && onNextEpisode) {
-        setCountdown(5); // Auto-play sau 5s
-        countdownIntervalRef.current = setInterval(() => {
-          setCountdown((prev) => {
-            if (prev === null || prev <= 1) {
-              if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-              onNextEpisode();
-              return null;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      } else {
-        onEnded?.();
-      }
-    };
-
-    video.addEventListener('play', onPlay);
-    video.addEventListener('pause', onPause);
-    video.addEventListener('timeupdate', onTimeUpdate);
-    video.addEventListener('durationchange', onDurationChange);
-    video.addEventListener('waiting', onWaiting);
-    video.addEventListener('playing', onPlaying);
-    video.addEventListener('canplay', onCanPlay);
-    video.addEventListener('ended', onEndedEvent);
-
-    return () => {
-      video.removeEventListener('play', onPlay);
-      video.removeEventListener('pause', onPause);
-      video.removeEventListener('timeupdate', onTimeUpdate);
-      video.removeEventListener('durationchange', onDurationChange);
-      video.removeEventListener('waiting', onWaiting);
-      video.removeEventListener('playing', onPlaying);
-      video.removeEventListener('canplay', onCanPlay);
-      video.removeEventListener('ended', onEndedEvent);
-      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-    };
-  }, [hasNextEpisode, onNextEpisode, onEnded, onProgress]);
-
-  // Controls Visibility
-  const showControlsHandler = useCallback(() => {
-    setShowControls(true);
-    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
-    if (isPlaying && countdown === null) {
-      controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
-    }
-  }, [isPlaying, countdown]);
-
-  useEffect(() => {
-    if (!isPlaying) {
-      setShowControls(true);
-      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
-    } else {
-      showControlsHandler();
-    }
-  }, [isPlaying, showControlsHandler]);
-
-  // Fullscreen change event listener
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      const isCurrentlyFullscreen = !!(
-        document.fullscreenElement ||
-        (document as any).webkitFullscreenElement ||
-        (document as any).mozFullScreenElement ||
-        (document as any).msFullscreenElement
-      );
-      setIsFullscreen(isCurrentlyFullscreen);
-    };
-
-    // Listen to all vendor-specific fullscreen change events
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-
-    // iOS Safari events on video element
-    const video = videoRef.current;
-    if (video) {
-      video.addEventListener('webkitbeginfullscreen', () => setIsFullscreen(true));
-      video.addEventListener('webkitendfullscreen', () => setIsFullscreen(false));
-    }
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
-      if (video) {
-        video.removeEventListener('webkitbeginfullscreen', () => setIsFullscreen(true));
-        video.removeEventListener('webkitendfullscreen', () => setIsFullscreen(false));
-      }
-    };
   }, []);
 
-  // Keyboard Shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!videoRef.current) return;
+  const skip = useCallback((seconds: number) => {
+    if (videoRef.current) videoRef.current.currentTime += seconds;
+  }, []);
 
-      // Prevent default scrolling for space and arrow keys
-      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
-        e.preventDefault();
-      }
-
-      switch (e.code) {
-        case 'Space':
-        case 'KeyK':
-          togglePlay();
-          break;
-        case 'ArrowRight':
-        case 'KeyL':
-          skip(10);
-          setSkipAnimation({ side: 'right', id: Date.now() });
-          break;
-        case 'ArrowLeft':
-        case 'KeyJ':
-          skip(-10);
-          setSkipAnimation({ side: 'left', id: Date.now() });
-          break;
-        case 'ArrowUp':
-          handleVolumeChange([Math.min(volume + 0.1, 1)]);
-          break;
-        case 'ArrowDown':
-          handleVolumeChange([Math.max(volume - 0.1, 0)]);
-          break;
-        case 'KeyF':
-          toggleFullscreen();
-          break;
-        case 'KeyM':
-          toggleMute();
-          break;
-      }
-      // showControlsHandler(); // Removed to prevent controls from showing on key press
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [volume, showControlsHandler]);
-
-  // Actions
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (videoRef.current.paused) {
-        videoRef.current.play();
-      } else {
-        videoRef.current.pause();
-      }
-    }
-  };
-
-  const toggleFullscreen = async () => {
-    if (!containerRef.current || !videoRef.current) return;
-
-    const container = containerRef.current;
-    const video = videoRef.current;
-
-    try {
-      const isCurrentlyFullscreen = !!(
-        document.fullscreenElement ||
-        (document as any).webkitFullscreenElement ||
-        (document as any).mozFullScreenElement ||
-        (document as any).msFullscreenElement
-      );
-
-      if (!isCurrentlyFullscreen) {
-        // Enter fullscreen - try container first, then video element for iOS
-
-        if (container.requestFullscreen) {
-          await container.requestFullscreen().catch((err) => console.warn('Native fullscreen rejected:', err));
-        } else if ((container as any).webkitRequestFullscreen) {
-          await (container as any).webkitRequestFullscreen().catch((err: any) => console.warn('Native fullscreen rejected:', err));
-        } else if ((container as any).mozRequestFullScreen) {
-          await (container as any).mozRequestFullScreen().catch((err: any) => console.warn('Native fullscreen rejected:', err));
-        } else if ((container as any).msRequestFullscreen) {
-          await (container as any).msRequestFullscreen().catch((err: any) => console.warn('Native fullscreen rejected:', err));
-        } else if ((video as any).webkitEnterFullscreen) {
-          // iOS Safari fallback - use video element's native fullscreen
-          (video as any).webkitEnterFullscreen();
-        }
-
-        // Force CSS fallback state so Theater Mode acts as fullscreen if native fails
-        setIsFullscreen(true);
-
-        // Try to lock orientation to landscape on mobile
-        try {
-          if (screen.orientation && (screen.orientation as any).lock) {
-            await (screen.orientation as any).lock('landscape');
-          }
-        } catch (err) {
-          // Orientation lock may not be supported, ignore
-        }
-      } else {
-        // Exit fullscreen
-        if (document.exitFullscreen && document.fullscreenElement) {
-          await document.exitFullscreen().catch(() => {});
-        } else if ((document as any).webkitExitFullscreen) {
-          await (document as any).webkitExitFullscreen().catch(() => {});
-        } else if ((document as any).mozCancelFullScreen) {
-          await (document as any).mozCancelFullScreen().catch(() => {});
-        } else if ((document as any).msExitFullscreen) {
-          await (document as any).msExitFullscreen().catch(() => {});
-        } else if ((video as any).webkitExitFullscreen) {
-          (video as any).webkitExitFullscreen();
-        }
-
-        // Force CSS fallback state
-        setIsFullscreen(false);  
-        try {
-          if (screen.orientation && (screen.orientation as any).unlock) {
-            (screen.orientation as any).unlock();
-          }
-        } catch (err) {
-          // Ignore
-        }
-      }
-    } catch (err) {
-      console.error('Fullscreen toggle failed:', err);
-    }
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-      if (!isMuted) setVolume(0);
-      else setVolume(1);
-    }
-  };
-
-  const handleVolumeChange = (value: number[]) => {
+  const handleVolumeChange = useCallback((value: number[]) => {
     const newVolume = value[0];
     if (videoRef.current) {
       videoRef.current.volume = newVolume;
@@ -618,437 +125,298 @@ const VideoPlayer = ({
       setVolume(newVolume);
       setIsMuted(newVolume === 0);
     }
-  };
+  }, []);
 
-  const handleSeek = (value: number[]) => {
+  const handleSeek = useCallback((value: number[]) => {
     if (videoRef.current) {
       videoRef.current.currentTime = value[0];
       setCurrentTime(value[0]);
     }
-  };
+  }, []);
 
-  const skip = (seconds: number) => {
+  const toggleMute = useCallback(() => {
     if (videoRef.current) {
-      videoRef.current.currentTime += seconds;
+      const nextMuted = !videoRef.current.muted;
+      videoRef.current.muted = nextMuted;
+      setIsMuted(nextMuted);
+      if (nextMuted) setVolume(0); else setVolume(1);
     }
-  };
+  }, []);
 
-  const handleQualityChange = (level: number) => {
-    if (hlsRef.current) {
-      hlsRef.current.currentLevel = level;
-      setQuality(level);
+  const showControlsHandler = useCallback(() => {
+    setShowControls(true);
+    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    if (videoRef.current && !videoRef.current.paused && countdown === null) {
+      controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
     }
-  };
+  }, [countdown]);
 
-  const handlePlaybackRateChange = (rate: number) => {
-    if (videoRef.current) {
-      videoRef.current.playbackRate = rate;
-      setPlaybackRate(rate);
-    }
-  };
+  const toggleFullscreen = useCallback(async () => {
+    if (!containerRef.current || !videoRef.current) return;
+    try {
+      const isCurrentlyFullscreen = !!(document.fullscreenElement || (document as any).webkitFullscreenElement);
+      if (!isCurrentlyFullscreen) {
+        if (containerRef.current.requestFullscreen) await containerRef.current.requestFullscreen();
+        else if ((containerRef.current as any).webkitRequestFullscreen) await (containerRef.current as any).webkitRequestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        if (document.exitFullscreen) await document.exitFullscreen();
+        else if ((document as any).webkitExitFullscreen) await (document as any).webkitExitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch (err) { console.error('Fullscreen error:', err); }
+  }, []);
 
-  // Smart Click Handler (Double tap detection)
-  const handleSmartClick = (e: React.MouseEvent<HTMLDivElement>, side: 'left' | 'right' | 'center') => {
+  const handlePlaybackRateChange = useCallback((rate: number) => {
+    if (videoRef.current) { videoRef.current.playbackRate = rate; setPlaybackRate(rate); }
+  }, []);
+
+  const handleQualityChange = useCallback((level: number) => {
+    if (hlsRef.current) { hlsRef.current.currentLevel = level; setQuality(level); }
+  }, []);
+
+  const handleBack = useCallback(() => {
+    if (typeof window !== "undefined" && window.history.length > 1) router.back();
+    else router.push("/");
+  }, [router]);
+
+  // 4. EFFECTS (All defined after actions)
+
+  useEffect(() => { movieNameRef.current = movieName; }, [movieName]);
+  useEffect(() => { movieSlugRef.current = movieSlug; }, [movieSlug]);
+  useEffect(() => { videoUrlRef.current = videoUrl; }, [videoUrl]);
+  useEffect(() => { posterRef.current = poster; }, [poster]);
+
+  // Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement) return;
+      if (!videoRef.current) return;
+      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
+      
+      const showFeedback = (icon: string, text?: string) => setShortcutFeedback({ icon, text, id: Date.now() });
+
+      switch (e.code) {
+        case 'Space': case 'KeyK': togglePlay(); showFeedback(videoRef.current.paused ? 'pause' : 'play'); break;
+        case 'ArrowRight': case 'KeyL': skip(10); setSkipAnimation({ side: 'right', id: Date.now() }); break;
+        case 'ArrowLeft': case 'KeyJ': skip(-10); setSkipAnimation({ side: 'left', id: Date.now() }); break;
+        case 'ArrowUp':
+          const volUp = Math.min(videoRef.current.volume + 0.1, 1);
+          handleVolumeChange([volUp]); showFeedback('volume', `${Math.round(volUp * 100)}%`); break;
+        case 'ArrowDown':
+          const volDown = Math.max(videoRef.current.volume - 0.1, 0);
+          handleVolumeChange([volDown]); showFeedback('volume', `${Math.round(volDown * 100)}%`); break;
+        case 'KeyF': toggleFullscreen(); break;
+        case 'KeyM': toggleMute(); showFeedback(videoRef.current.muted ? 'mute' : 'volume'); break;
+        case 'Digit1': case 'Digit2': case 'Digit3': case 'Digit4': case 'Digit5':
+        case 'Digit6': case 'Digit7': case 'Digit8': case 'Digit9': case 'Digit0':
+          const percent = e.code === 'Digit0' ? 0 : parseInt(e.code.replace('Digit', '')) * 10;
+          if (videoRef.current.duration) { handleSeek([(percent / 100) * videoRef.current.duration]); showFeedback('seek', `${percent}%`); }
+          break;
+      }
+      showControlsHandler();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePlay, skip, handleVolumeChange, handleSeek, toggleMute, toggleFullscreen, showControlsHandler]);
+
+  // HLS/Video Setup
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !videoUrl) return;
+    setError(null); setIsLoading(true);
+    const initHls = () => {
+      if (HLS.isSupported()) {
+        const hls = new HLS({ enableWorker: true, lowLatencyMode: true, startLevel: -1 });
+        hls.loadSource(videoUrl); hls.attachMedia(video); hlsRef.current = hls;
+        hls.on(HLS.Events.MANIFEST_PARSED, (e, data) => {
+          setIsLoading(false);
+          const availableQualities = data.levels.map((l, index) => ({ height: l.height, level: index })).sort((a, b) => b.height - a.height);
+          setQualities(availableQualities);
+          if (autoplay) video.play().catch(() => {});
+        });
+        hls.on(HLS.Events.ERROR, (e, data) => {
+          if (data.fatal) {
+            if (retryCount < 3) { setRetryCount(p => p + 1); setTimeout(() => hls.startLoad(), 1000); }
+            else { setError("Lỗi tải video. Thử trình phát dự phòng."); setIsLoading(false); onSwitchToEmbed?.(); }
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = videoUrl; video.addEventListener('loadedmetadata', () => { setIsLoading(false); if (autoplay) video.play().catch(() => {}); });
+      }
+    };
+    initHls();
+    return () => { if (hlsRef.current) hlsRef.current.destroy(); video.src = ''; };
+  }, [videoUrl, autoplay, retryCount, onSwitchToEmbed]);
+
+  // Event Listeners for State
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const onTimeUpdate = () => {
+      setCurrentTime(video.currentTime);
+      if (video.buffered.length > 0) setBuffered(video.buffered.end(video.buffered.length - 1));
+      const currentSecond = Math.floor(video.currentTime);
+      if (currentSecond !== lastProgressSecondRef.current) { lastProgressSecondRef.current = currentSecond; onProgress?.(video.currentTime, video.duration || 0); }
+    };
+    const onEndedEvent = () => {
+      if (hasNextEpisode && onNextEpisode) {
+        setCountdown(5);
+        countdownIntervalRef.current = setInterval(() => {
+          setCountdown(p => {
+            if (p === null || p <= 1) { if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current); onNextEpisode(); return null; }
+            return p - 1;
+          });
+        }, 1000);
+      } else onEnded?.();
+    };
+    video.addEventListener('timeupdate', onTimeUpdate);
+    video.addEventListener('ended', onEndedEvent);
+    video.addEventListener('play', () => setIsPlaying(true));
+    video.addEventListener('pause', () => setIsPlaying(false));
+    video.addEventListener('durationchange', () => setDuration(video.duration));
+    video.addEventListener('waiting', () => setIsLoading(true));
+    video.addEventListener('playing', () => setIsLoading(false));
+    return () => {
+      video.removeEventListener('timeupdate', onTimeUpdate); video.removeEventListener('ended', onEndedEvent);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    };
+  }, [hasNextEpisode, onNextEpisode, onEnded, onProgress]);
+
+  // Initial Seek
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || initialTime <= 0) return;
+    const seek = () => { if (didSeekInitialTimeRef.current || !video.duration) return; video.currentTime = Math.min(initialTime, video.duration - 1); didSeekInitialTimeRef.current = true; };
+    video.addEventListener('loadedmetadata', seek);
+    setTimeout(seek, 1000);
+    return () => video.removeEventListener('loadedmetadata', seek);
+  }, [initialTime]);
+
+  // PiP Storage Cleanup
+  useEffect(() => {
+    return () => {
+      const v = videoRef.current;
+      if (v && !v.paused && v.currentTime > 3 && videoUrlRef.current && movieSlugRef.current) {
+        pipStore.set({ videoUrl: videoUrlRef.current, movieName: movieNameRef.current || '', movieSlug: movieSlugRef.current, poster: posterRef.current, currentTime: v.currentTime });
+      }
+    };
+  }, []);
+
+  // Smart Click
+  const handleSmartClick = (e: React.MouseEvent, side: 'left' | 'right' | 'center') => {
     e.stopPropagation();
     const now = Date.now();
-    const timeDiff = now - lastClickTimeRef.current;
-
-    if (timeDiff < 300) {
-      // Double click detected
-      if (clickTimeoutRef.current) {
-        clearTimeout(clickTimeoutRef.current);
-        clickTimeoutRef.current = null;
-      }
-
-      if (side === 'left') {
-        skip(-10);
-        setSkipAnimation({ side: 'left', id: now });
-      } else if (side === 'right') {
-        skip(10);
-        setSkipAnimation({ side: 'right', id: now });
-      } else {
-        toggleFullscreen();
-      }
+    if (now - lastClickTimeRef.current < 300) {
+      if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
+      if (side === 'left') { skip(-10); setSkipAnimation({ side: 'left', id: now }); }
+      else if (side === 'right') { skip(10); setSkipAnimation({ side: 'right', id: now }); }
+      else toggleFullscreen();
     } else {
-      // Single click - capture current state to decide action
-      const currentControlsState = showControls;
-
-      clickTimeoutRef.current = setTimeout(() => {
-        // Clear any auto-hide timeout
-        if (controlsTimeoutRef.current) {
-          clearTimeout(controlsTimeoutRef.current);
-          controlsTimeoutRef.current = null;
-        }
-
-        // Toggle based on state at time of click
-        if (!currentControlsState) {
-          showControlsHandler();
-        } else {
-          setShowControls(false);
-        }
-        clickTimeoutRef.current = null;
-      }, 300);
+      const currentState = showControls;
+      clickTimeoutRef.current = setTimeout(() => { if (!currentState) showControlsHandler(); else setShowControls(false); }, 300);
     }
-
     lastClickTimeRef.current = now;
   };
 
+  // 5. JSX
   return (
-    <div
-      ref={containerRef}
-      data-fullscreen={isFullscreen}
-      className={cn(
-        "relative bg-black group overflow-hidden select-none",
-        isFullscreen 
-          ? "fixed inset-0 z-[99999] w-screen h-[100dvh] max-w-none max-h-none rounded-none aspect-auto m-0 !p-0"
-          : "w-full aspect-video rounded-xl lg:rounded-2xl"
-      )}
-      onMouseMove={(e) => {
-        if (e.movementX !== 0 || e.movementY !== 0) {
-          showControlsHandler();
-        }
-      }}
-      onMouseLeave={() => isPlaying && setShowControls(false)}
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      {/* Video Element - Optimized for fast loading */}
-      <video
-        ref={videoRef}
-        className="w-full h-full object-contain"
-        poster={poster}
-        playsInline
-        preload="auto"
-        crossOrigin="anonymous"
-        style={{
-          colorGamut: 'p3',
-          colorSpace: 'display-p3',
-        } as React.CSSProperties}
-      />
-
-      {/* Gesture Zones */}
+    <div ref={containerRef} className={cn("relative bg-black group overflow-hidden select-none w-full aspect-video rounded-xl lg:rounded-2xl shadow-2xl", isFullscreen && "fixed inset-0 z-[99999] w-screen h-[100dvh] rounded-none")} onMouseMove={showControlsHandler} onMouseLeave={() => isPlaying && setShowControls(false)}>
+      <video ref={videoRef} className="w-full h-full object-contain" poster={poster} playsInline crossOrigin="anonymous" />
+      
       <div className="absolute inset-0 flex z-10">
-        <div
-          className="w-[35%] h-full z-20"
-          onClick={(e) => handleSmartClick(e, 'left')}
-          onDoubleClick={(e) => e.stopPropagation()} // Prevent native double click
-        />
-        <div
-          className="w-[30%] h-full z-20"
-          onClick={(e) => handleSmartClick(e, 'center')}
-          onDoubleClick={(e) => e.stopPropagation()}
-        />
-        <div
-          className="w-[35%] h-full z-20"
-          onClick={(e) => handleSmartClick(e, 'right')}
-          onDoubleClick={(e) => e.stopPropagation()}
-        />
+        <div className="w-[35%] h-full z-20 cursor-pointer" onClick={(e) => handleSmartClick(e, 'left')} />
+        <div className="w-[30%] h-full z-20 cursor-pointer" onClick={(e) => handleSmartClick(e, 'center')} />
+        <div className="w-[35%] h-full z-20 cursor-pointer" onClick={(e) => handleSmartClick(e, 'right')} />
       </div>
 
-      {/* Skip Animation Overlay */}
       {skipAnimation && (
-        <div
-          key={skipAnimation.id}
-          className={cn(
-            "absolute top-0 bottom-0 flex items-center justify-center w-[40%] z-30 bg-white/10 pointer-events-none animate-in fade-in zoom-in duration-300",
-            skipAnimation.side === 'left' ? "left-0 rounded-r-full" : "right-0 rounded-l-full"
-          )}
-          onAnimationEnd={() => setSkipAnimation(null)}
-        >
+        <div key={skipAnimation.id} className={cn("absolute top-0 bottom-0 flex items-center justify-center w-[30%] z-30 bg-white/5 pointer-events-none animate-in fade-in zoom-in duration-300", skipAnimation.side === 'left' ? "left-0 rounded-r-full" : "right-0 rounded-l-full")} onAnimationEnd={() => setSkipAnimation(null)}>
           <div className="flex flex-col items-center text-white">
-            {skipAnimation.side === 'left' ? (
-              <>
-                <ChevronsLeft className="w-12 h-12 mb-2 animate-pulse" />
-                <span className="text-sm font-bold">-10 giây</span>
-              </>
-            ) : (
-              <>
-                <ChevronsRight className="w-12 h-12 mb-2 animate-pulse" />
-                <span className="text-sm font-bold">+10 giây</span>
-              </>
-            )}
+            {skipAnimation.side === 'left' ? <><ChevronsLeft className="w-12 h-12" /><span>-10s</span></> : <><ChevronsRight className="w-12 h-12" /><span>+10s</span></>}
           </div>
         </div>
       )}
 
-      {/* Loading Overlay */}
-      {isLoading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-black/80 via-black/40 to-black/80 z-20 pointer-events-none">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-white/20 rounded-full"></div>
-            <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-white rounded-full animate-spin"></div>
+      {shortcutFeedback && (
+        <div key={shortcutFeedback.id} className="absolute inset-0 flex items-center justify-center z-[55] pointer-events-none">
+          <div className="bg-black/60 backdrop-blur-md rounded-2xl p-6 flex flex-col items-center gap-3 animate-in fade-in zoom-in duration-500 fill-mode-forwards">
+            <div className="p-4 bg-white/10 rounded-full">
+              {shortcutFeedback.icon === 'play' && <Play className="w-8 h-8 text-white fill-white" />}
+              {shortcutFeedback.icon === 'pause' && <Pause className="w-8 h-8 text-white fill-white" />}
+              {shortcutFeedback.icon === 'volume' && <Volume2 className="w-8 h-8 text-white" />}
+              {shortcutFeedback.icon === 'mute' && <VolumeX className="w-8 h-8 text-red-500" />}
+              {shortcutFeedback.icon === 'seek' && <ChevronsRight className="w-8 h-8 text-white" />}
+            </div>
+            {shortcutFeedback.text && <span className="text-xl font-bold text-white tracking-widest">{shortcutFeedback.text}</span>}
           </div>
-          <p className="text-white/80 text-sm mt-4 font-medium">Đang tải video...</p>
-          {retryCount > 0 && (
-            <p className="text-yellow-400 text-xs mt-2">Đang thử lại ({retryCount}/{maxRetries})</p>
-          )}
         </div>
       )}
 
-      {/* Next Episode Countdown Overlay */}
+      {isLoading && <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 z-20"><Loader2 className="w-12 h-12 text-primary animate-spin mb-4" /><p className="text-white/80 text-sm font-bold">Đang tải video...</p></div>}
+
       {countdown !== null && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-[60] backdrop-blur-md pointer-events-auto">
-          <div className="text-center p-6 animate-in fade-in zoom-in duration-300">
-            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2 shadow-black drop-shadow-lg">Sắp phát tập tiếp theo</h3>
-            <p className="text-white/80 mb-8 sm:text-lg">Tự động chuyển tập sau {countdown} giây</p>
-            
-            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-[6px] border-zinc-800 flex items-center justify-center mx-auto relative group mb-8">
-              <svg className="absolute inset-0 w-full h-full -rotate-90">
-                <circle
-                  cx="50%"
-                  cy="50%"
-                  r="calc(50% - 3px)"
-                  className="fill-transparent stroke-primary transition-all duration-1000 ease-linear"
-                  strokeWidth="6"
-                  strokeDasharray="100 100"
-                  strokeDashoffset={100 - (100 * (countdown / 5))} 
-                  pathLength="100"
-                />
-              </svg>
-              <span className="text-4xl sm:text-5xl font-black text-primary animate-pulse">{countdown}</span>
-            </div>
-
-            <div className="flex gap-4 items-center justify-center">
-              <Button
-                variant="outline"
-                className="bg-zinc-800/80 border-white/10 text-white hover:bg-zinc-700/80 rounded-full px-6"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCountdown(null);
-                  if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-                }}
-              >
-                Hủy bỏ
-              </Button>
-              <Button
-                className="bg-primary text-black hover:bg-primary/90 min-w-32 rounded-full font-bold px-6 shadow-lg shadow-primary/20"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCountdown(null);
-                  if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-                  onNextEpisode?.();
-                }}
-              >
-                Chuyển ngay <SkipForward className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-[60] backdrop-blur-md">
+          <h3 className="text-2xl font-bold text-white mb-2">Tập tiếp theo sau</h3>
+          <div className="text-6xl font-black text-primary mb-8 animate-pulse">{countdown}s</div>
+          <div className="flex gap-4">
+            <Button variant="outline" onClick={() => setCountdown(null)} className="rounded-full px-8">Hủy</Button>
+            <Button className="bg-primary text-black font-bold rounded-full px-8" onClick={onNextEpisode}>Phát ngay</Button>
           </div>
         </div>
       )}
 
-      {/* Error Overlay */}
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/90 via-black/70 to-black/90 z-30 backdrop-blur-sm">
-          <div className="text-center p-6 max-w-md">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
-              <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <p className="text-red-400 font-bold text-lg mb-2">Không thể phát video</p>
-            <p className="text-white/80 text-sm mb-4">{error}</p>
-            <div className="flex gap-3 justify-center">
-              <Button
-                onClick={() => {
-                  setError(null);
-                  setRetryCount(0);
-                  setIsLoading(true);
-                }}
-                className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm"
-                size="sm"
-              >
-                Thử lại
-              </Button>
-              {onSwitchToEmbed && (
-                <Button
-                  onClick={() => onSwitchToEmbed()}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                  size="sm"
-                >
-                  Chế độ Dự phòng
-                </Button>
-              )}
-            </div>
-          </div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-[70] p-6 text-center">
+          <p className="text-red-500 font-bold mb-4">{error}</p>
+          <Button onClick={onSwitchToEmbed} className="bg-primary text-black font-bold">Dùng trình phát dự phòng</Button>
         </div>
       )}
 
-      {/* Back Button */}
-      <div className={cn(
-        "absolute top-4 left-4 z-40 transition-opacity duration-300",
-        showControls ? "opacity-100" : "opacity-0"
-      )}>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="bg-black/40 hover:bg-black/60 text-white rounded-full w-10 h-10 backdrop-blur-sm"
-          onClick={handleBack}
-          aria-label="Quay lại"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
+      <div className={cn("absolute top-4 left-4 z-40 transition-opacity duration-300", showControls ? "opacity-100" : "opacity-0")}>
+        <Button variant="ghost" size="icon" className="bg-black/40 hover:bg-black/60 text-white rounded-full w-10 h-10 backdrop-blur-sm pointer-events-auto" onClick={handleBack}><ArrowLeft className="w-5 h-5" /></Button>
       </div>
 
-      {/* Dimming Overlay */}
-      <div className={cn(
-        "absolute inset-0 bg-black/40 z-30 transition-opacity duration-300 pointer-events-none",
-        showControls ? "opacity-100" : "opacity-0"
-      )} />
-
-      {/* Center Controls Overlay */}
-      <div className={cn(
-        "absolute inset-0 flex items-center justify-center gap-24 z-40 transition-opacity duration-300 pointer-events-none",
-        showControls ? "opacity-100" : "opacity-0"
-      )}>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => { e.stopPropagation(); skip(-10); }}
-          className="text-white hover:bg-transparent hover:text-white/80 w-24 h-24 rounded-full pointer-events-auto"
-          aria-label="Lùi 10 giây"
-        >
-          <SkipBack className="w-12 h-12" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-          className="text-white hover:bg-transparent hover:text-white/80 w-32 h-32 rounded-full pointer-events-auto"
-          aria-label={isPlaying ? "Tạm dừng" : "Phát"}
-        >
-          {isPlaying ? <Pause className="w-16 h-16 fill-white" /> : <Play className="w-16 h-16 fill-white ml-2" />}
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => { e.stopPropagation(); skip(10); }}
-          className="text-white hover:bg-transparent hover:text-white/80 w-24 h-24 rounded-full pointer-events-auto"
-          aria-label="Tiến 10 giây"
-        >
-          <SkipForward className="w-12 h-12" />
-        </Button>
+      <div className={cn("absolute inset-0 flex items-center justify-center gap-12 md:gap-24 z-40 transition-opacity duration-300 pointer-events-none", showControls ? "opacity-100" : "opacity-0")}>
+        <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); skip(-10); }} className="text-white hover:bg-transparent hover:text-white/80 w-16 h-16 md:w-24 md:h-24 rounded-full pointer-events-auto"><SkipBack className="w-8 h-8 md:w-12 md:h-12" /></Button>
+        <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); togglePlay(); }} className="text-white hover:bg-transparent hover:text-white/80 w-24 h-24 md:w-32 md:h-32 rounded-full pointer-events-auto">{isPlaying ? <Pause className="w-12 h-12 md:w-16 md:h-16 fill-white" /> : <Play className="w-12 h-12 md:w-16 md:h-16 fill-white ml-2" />}</Button>
+        <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); skip(10); }} className="text-white hover:bg-transparent hover:text-white/80 w-16 h-16 md:w-24 md:h-24 rounded-full pointer-events-auto"><SkipForward className="w-8 h-8 md:w-12 md:h-12" /></Button>
       </div>
 
-      {/* Controls Overlay */}
-      <div className={cn(
-        "absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 z-50 pointer-events-none",
-        showControls ? "opacity-100" : "opacity-0"
-      )}>
-        {/* Progress Bar Container */}
-        <div className="px-4 pb-0 group/progress pointer-events-auto">
-          {/* Hover Preview could go here */}
-          <div className="relative h-1.5 w-full cursor-pointer touch-none select-none flex items-center">
-            <Slider
-              value={[currentTime]}
-              min={0}
-              max={duration || 100}
-              step={1}
-              onValueChange={handleSeek}
-              className="z-20 py-4" // Add padding to make hit area larger
-            />
-          </div>
+      <div className={cn("absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 z-50 pointer-events-none", showControls ? "opacity-100" : "opacity-0")}>
+        <div className="px-4 pb-0 pointer-events-auto">
+          <Slider value={[currentTime]} min={0} max={duration || 100} onValueChange={handleSeek} className="py-4" />
         </div>
-
-        {/* Controls Bar */}
-        <div className="px-4 pb-4 pt-2 flex items-center justify-between gap-4 pointer-events-auto">
-          {/* Left Controls */}
-          <div className="flex items-center gap-2 md:gap-4">
-            <Button variant="ghost" size="icon" onClick={togglePlay} className="text-white hover:bg-white/20" aria-label={isPlaying ? "Tạm dừng" : "Phát"}>
-              {isPlaying ? <Pause className="w-6 h-6 fill-white" /> : <Play className="w-6 h-6 fill-white" />}
-            </Button>
-
-            <div className="flex items-center gap-1 group/volume">
-              <Button variant="ghost" size="icon" onClick={toggleMute} className="text-white hover:bg-white/20 w-8 h-8" aria-label={isMuted || volume === 0 ? "Bật âm thanh" : "Tắt âm thanh"}>
-                {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-              </Button>
-              <div className="w-0 overflow-hidden group-hover/volume:w-20 transition-all duration-300 ease-in-out">
-                <Slider
-                  value={[isMuted ? 0 : volume]}
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  onValueChange={handleVolumeChange}
-                  className="w-20"
-                />
-              </div>
+        <div className="px-4 pb-4 flex items-center justify-between gap-4 pointer-events-auto">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={togglePlay} className="text-white hover:bg-white/10">{isPlaying ? <Pause className="w-6 h-6 fill-white" /> : <Play className="w-6 h-6 fill-white" />}</Button>
+            <div className="flex items-center gap-2 group/volume">
+              <Button variant="ghost" size="icon" onClick={toggleMute} className="text-white hover:bg-white/10">{isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}</Button>
+              <Slider value={[isMuted ? 0 : volume]} min={0} max={1} step={0.01} onValueChange={handleVolumeChange} className="w-20" />
             </div>
-
-            <div className="text-white text-xs md:text-sm font-medium tabular-nums">
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </div>
+            <div className="text-white text-xs tabular-nums font-bold">{formatTime(currentTime)} / {formatTime(duration)}</div>
           </div>
-
-          {/* Right Controls */}
-          <div className="flex items-center gap-1">
-
-
-            {/* Playback Speed */}
+          <div className="flex items-center gap-2">
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-white hover:bg-white/20 w-auto px-2 text-xs font-bold"
-                  aria-label="Tốc độ phát"
-                >
-                  {playbackRate === 1 ? '1x' : `${playbackRate}x`}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" className="bg-black/90 border-white/10 text-white min-w-[120px]">
-                <DropdownMenuLabel className="text-white/60 text-xs">Tốc độ phát</DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-white/10" />
-                <DropdownMenuRadioGroup value={String(playbackRate)} onValueChange={(v) => handlePlaybackRateChange(Number(v))}>
-                  {[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map((rate) => (
-                    <DropdownMenuRadioItem key={rate} value={String(rate)} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer">
-                      {rate === 1 ? 'Bình thường (1x)' : `${rate}x`}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
+              <DropdownMenuTrigger asChild><Button variant="ghost" className="text-white text-xs font-bold hover:bg-white/20 px-2">{playbackRate}x</Button></DropdownMenuTrigger>
+              <DropdownMenuContent side="top" className="bg-black/90 border-white/10 text-white min-w-[100px]">
+                {[0.5, 0.75, 1, 1.25, 1.5, 2].map(r => <DropdownMenuItem key={r} onClick={() => handlePlaybackRateChange(r)} className="cursor-pointer hover:bg-white/10">{r === 1 ? 'Chuẩn (1x)' : `${r}x`}</DropdownMenuItem>)}
               </DropdownMenuContent>
             </DropdownMenu>
-
-            {/* Quality Selector */}
             {qualities.length > 0 && (
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/20 w-auto px-2 text-xs font-bold"
-                    aria-label="Chất lượng video"
-                  >
-                    {quality === -1
-                      ? 'Auto'
-                      : `${qualities.find((q) => q.level === quality)?.height || '?'}p`}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="top" className="bg-black/90 border-white/10 text-white min-w-[140px]">
-                  <DropdownMenuLabel className="text-white/60 text-xs">Chất lượng</DropdownMenuLabel>
+                <DropdownMenuTrigger asChild><Button variant="ghost" className="text-white text-xs font-bold hover:bg-white/20 px-2">{quality === -1 ? 'Auto' : `${qualities.find(q => q.level === quality)?.height || '?'}p`}</Button></DropdownMenuTrigger>
+                <DropdownMenuContent side="top" className="bg-black/90 border-white/10 text-white min-w-[120px]">
+                  <DropdownMenuItem onClick={() => handleQualityChange(-1)} className="cursor-pointer hover:bg-white/10">Tự động (Auto)</DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-white/10" />
-                  <DropdownMenuRadioGroup value={String(quality)} onValueChange={(v) => handleQualityChange(Number(v))}>
-                    <DropdownMenuRadioItem value="-1" className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer">
-                      Tự động (Auto)
-                    </DropdownMenuRadioItem>
-                    {qualities.map((q) => (
-                      <DropdownMenuRadioItem key={q.level} value={String(q.level)} className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer">
-                        {q.height}p {q.height >= 1080 ? '🔥' : q.height >= 720 ? '✨' : ''}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
+                  {qualities.map((q) => <DropdownMenuItem key={q.level} onClick={() => handleQualityChange(q.level)} className="cursor-pointer hover:bg-white/10">{q.height}p {q.height >= 1080 ? '🔥' : q.height >= 720 ? '✨' : ''}</DropdownMenuItem>)}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-
-            <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-white hover:bg-white/20 w-8 h-8" aria-label={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>
-              {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
-            </Button>
+            <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-white hover:bg-white/10">{isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}</Button>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default VideoPlayer;
-
+}

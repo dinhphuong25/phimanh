@@ -75,7 +75,7 @@ function Header({
   const isActiveLink = (href: string) => pathname === href;
 
   return (
-    <nav data-header className={`fixed top-0 z-[100] w-full transition-all duration-500 border-b bg-black/95 ${isScrolled ? 'backdrop-blur-xl border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]' : 'border-white/5'}`}>
+    <nav data-header className={`fixed top-0 z-[100] w-full transition-all duration-500 border-b ${isScrolled ? 'bg-black/95 backdrop-blur-xl border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]' : pathname === '/' ? 'bg-gradient-to-b from-black/70 to-transparent border-transparent' : 'bg-black/95 border-white/5'}`}>
       <div className="relative">
         {/* Thanh accent nhỏ chạy ngang header khi cuộn */}
         <div className={`absolute bottom-0 left-0 h-[1px] bg-gradient-to-r from-transparent via-primary to-transparent transition-all duration-500 ease-in-out ${isScrolled ? 'w-full opacity-100' : 'w-0 opacity-0'}`}></div>

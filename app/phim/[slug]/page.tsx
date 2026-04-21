@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       : `https://phimimg.com/${movie.poster_url}`;
 
     return {
-      title: `${movie.name} - Xem phim HD | Rạp Phim Chill`,
+      title: `${movie.name} - Xem phim HD`,
       description: movie.content?.substring(0, 160) || `Xem phim ${movie.name} HD miễn phí tại Rạp Phim Chill`,
       openGraph: {
         title: movie.name,
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       alternates: { canonical: `https://rapphimchill.app/phim/${slug}` },
     };
   } catch {
-    return { title: "Phim | Rạp Phim Chill" };
+    return { title: "Phim" };
   }
 }
 

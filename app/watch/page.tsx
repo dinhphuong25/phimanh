@@ -18,14 +18,14 @@ const getMovieData = unstable_cache(
 
 export async function generateMetadata({ searchParams }: any) {
   const { slug } = await searchParams;
-  if (!slug) return { title: "Xem phim | Rạp Phim Chill" };
+  if (!slug) return { title: "Xem phim" };
   
   try {
     // Note: We use getMovieData which is cached, but Next.js will stream 
     // the layout immediately anyway as long as the page is dynamic
     const data = await getMovieData(slug);
     const movie = data?.movie;
-    if (!movie?.name) return { title: "Xem phim | Rạp Phim Chill" };
+    if (!movie?.name) return { title: "Xem phim" };
     const watchUrl = `https://rapphimchill.app/watch?slug=${slug}`;
     const canonicalUrl = `https://rapphimchill.app/phim/${slug}`;
     
@@ -38,7 +38,7 @@ export async function generateMetadata({ searchParams }: any) {
       : `https://phimimg.com/${movie.thumb_url}`;
 
     return {
-      title: `${movie.name} - Xem phim HD chất lượng cao | Rạp Phim Chill`,
+      title: `${movie.name} - Xem phim HD chất lượng cao`,
       description: movie.content
         ? movie.content.substring(0, 160) + "..."
         : `Xem phim ${movie.name} HD chất lượng cao miễn phí tại Rạp Phim Chill.`,
@@ -55,7 +55,7 @@ export async function generateMetadata({ searchParams }: any) {
       alternates: { canonical: canonicalUrl },
     };
   } catch {
-    return { title: "Xem phim | Rạp Phim Chill" };
+    return { title: "Xem phim" };
   }
 }
 

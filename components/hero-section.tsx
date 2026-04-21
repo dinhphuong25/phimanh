@@ -24,7 +24,7 @@ export default function HeroSection({ movie }: HeroSectionProps) {
     const imdbScore = movie.imdb?.rating || "8.2";
 
     return (
-        <div className="relative w-full min-h-[85vh] overflow-hidden bg-black mt-14 sm:mt-16">
+        <div className="relative w-full min-h-[85vh] overflow-hidden bg-black">
 
             {/* ── Skeleton shimmer ── hiện khi ảnh chưa load */}
             {!imageLoaded && (
