@@ -106,12 +106,20 @@ const PaginationEllipsis = ({
 )
 PaginationEllipsis.displayName = "PaginationEllipsis"
 
+const MemoizedPagination = React.memo(Pagination)
+const MemoizedPaginationContent = React.memo(PaginationContent)
+const MemoizedPaginationLink = React.memo(PaginationLink)
+const MemoizedPaginationItem = React.memo(PaginationItem)
+const MemoizedPaginationPrevious = React.memo(PaginationPrevious)
+const MemoizedPaginationNext = React.memo(PaginationNext)
+const MemoizedPaginationEllipsis = React.memo(PaginationEllipsis)
+
 export {
-  Pagination,
-  PaginationContent,
-  PaginationLink,
-  PaginationItem,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationEllipsis,
+  MemoizedPagination as Pagination,
+  MemoizedPaginationContent as PaginationContent,
+  MemoizedPaginationLink as PaginationLink,
+  MemoizedPaginationItem as PaginationItem,
+  MemoizedPaginationPrevious as PaginationPrevious,
+  MemoizedPaginationNext as PaginationNext,
+  MemoizedPaginationEllipsis as PaginationEllipsis,
 }

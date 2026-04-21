@@ -251,8 +251,8 @@ const VideoPlayer = ({
         });
 
         hls.on(HLS.Events.ERROR, (event, data) => {
-          console.error('HLS Error:', data);
           if (data.fatal) {
+            console.error('HLS Fatal Error:', data);
             clearTimeout(loadTimeout);
             switch (data.type) {
               case HLS.ErrorTypes.NETWORK_ERROR:

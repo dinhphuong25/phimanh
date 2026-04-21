@@ -66,9 +66,10 @@ export default function LazyImage({
           sizes={sizes}
           quality={quality}
           priority={priority}
+          unoptimized={true}
           placeholder={placeholder === "blur" ? "blur" : "empty"}
           blurDataURL={blurDataURL}
-          onLoadingComplete={() => setIsLoaded(true)}
+          onLoad={() => setIsLoaded(true)}
           onError={() => {
             setError(true);
             setIsLoaded(true);

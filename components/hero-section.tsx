@@ -66,6 +66,7 @@ export default function HeroSection({ movie }: HeroSectionProps) {
                     fetchPriority="high"
                     sizes="100vw"
                     quality={70}
+                    unoptimized={true}
                     className={`object-cover object-center transition-opacity duration-700 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
                     onLoad={() => setImageLoaded(true)}
                 />

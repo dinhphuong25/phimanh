@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import LiveStatus from "@/components/live-status";
 import { filterHiddenMovies } from "@/lib/hidden-movies";
@@ -30,11 +30,11 @@ const TOPIC_NAMES: Record<string, string> = {
   "phim-chieu-rap": "Phim Chiếu Rạp",
 };
 
-export default function MovieListClient({
+const MovieListClient = ({
   index = 1,
   category,
   topic,
-}: MovieListClientProps) {
+}: MovieListClientProps) => {
   const searchParams = useSearchParams();
   const [movies, setMovies] = useState<any[]>([]);
   const [pageInfo, setPageInfo] = useState<any>(null);
@@ -194,4 +194,7 @@ export default function MovieListClient({
       </Suspense>
     </div>
   );
-}
+};
+
+export default React.memo(MovieListClient);
+

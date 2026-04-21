@@ -77,6 +77,7 @@ export default function OptimizedImage({
         placeholder={placeholder}
         blurDataURL={blurDataURL || defaultBlurDataURL}
         sizes={sizes}
+        unoptimized={true}
         onLoad={handleLoadingComplete}
         onError={handleError}
         className={`transition-opacity duration-300 ${

@@ -59,6 +59,7 @@ const LazyImage = memo(function LazyImage({
           loading={priority ? "eager" : "lazy"}
           sizes="(max-width: 480px) 160px, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
           priority={priority}
+          unoptimized={true}
           onLoad={() => setIsLoaded(true)}
           onError={() => setHasError(true)}
           className={`object-cover transition-opacity duration-300 ${isLoaded ? "opacity-100" : "opacity-0"}`}

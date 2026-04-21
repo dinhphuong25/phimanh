@@ -97,6 +97,7 @@ const ContinueWatchingCard = memo(function ContinueWatchingCard({
           fill
           quality={75}
           sizes="(max-width: 640px) 144px, 176px"
+          unoptimized={true}
           className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
         />
         

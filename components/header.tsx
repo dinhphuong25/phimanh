@@ -84,6 +84,7 @@ function Header({
           <div className="flex items-center">
             <Link
               href="/"
+              prefetch={true}
               onClick={() => showLoading()}
               className="group flex items-center gap-3 relative"
             >

@@ -12,14 +12,21 @@ export default function EnhancedGTMTracking() {
         __html: `
           (function() {
             if (!window.dataLayer) return;
+            var ric = window.requestIdleCallback || function(cb) { setTimeout(cb, 1) };
             window.trackMovieView = function(name, slug) {
-              window.dataLayer.push({ event: 'movie_view', movie_name: name, movie_slug: slug });
+              ric(function() {
+                window.dataLayer.push({ event: 'movie_view', movie_name: name, movie_slug: slug });
+              });
             };
             window.trackSearchQuery = function(query, count) {
-              window.dataLayer.push({ event: 'search', search_term: query, results_count: count });
+              ric(function() {
+                window.dataLayer.push({ event: 'search', search_term: query, results_count: count });
+              });
             };
             window.trackCategoryView = function(name, slug) {
-              window.dataLayer.push({ event: 'category_view', category_name: name, category_slug: slug });
+              ric(function() {
+                window.dataLayer.push({ event: 'category_view', category_name: name, category_slug: slug });
+              });
             };
           })();
         `,

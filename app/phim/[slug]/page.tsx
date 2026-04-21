@@ -85,6 +85,7 @@ export default async function PhimDetailPage({ params }: { params: Promise<{ slu
             alt={movie.name}
             fill
             priority
+            unoptimized={true}
             className="object-cover"
             sizes="100vw"
           />
@@ -98,7 +99,7 @@ export default async function PhimDetailPage({ params }: { params: Promise<{ slu
           {/* Poster */}
           <div className="shrink-0 mx-auto sm:mx-0">
             <div className="relative w-44 sm:w-52 aspect-[2/3] rounded-xl overflow-hidden shadow-2xl border border-white/10">
-              <Image src={posterUrl} alt={movie.name} fill className="object-cover" sizes="208px" />
+              <Image src={posterUrl} alt={movie.name} fill className="object-cover" sizes="208px" unoptimized={true} />
             </div>
           </div>
 
