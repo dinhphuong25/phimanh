@@ -211,9 +211,9 @@ export default function Description({ movie, serverData }: any) {
   };
 
   return (
-    <div className="w-full flex-col max-w-[1450px] mx-auto py-4 md:py-6 px-3 sm:px-4 lg:px-6 gap-6 md:gap-8 flex z-10 relative overflow-x-hidden">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 items-start z-20">
-        <Card className="lg:col-span-8 xl:col-span-9 border-0 overflow-hidden shadow-2xl ring-1 ring-white/10 w-full aspect-video rounded-xl lg:rounded-2xl bg-black/90">
+    <div className="w-full flex-col max-w-[1450px] mx-auto py-0 md:py-6 px-0 sm:px-4 lg:px-6 gap-0 md:gap-8 flex z-10 relative overflow-x-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-7 items-start z-20">
+        <Card className="lg:col-span-8 xl:col-span-9 border-0 overflow-hidden shadow-2xl ring-1 ring-white/10 w-full aspect-video rounded-none sm:rounded-xl lg:rounded-2xl bg-black/90">
           <CardContent className="p-0 h-full w-full">
             {playerMode === 'm3u8' ? (
               <VideoPlayer
@@ -240,7 +240,7 @@ export default function Description({ movie, serverData }: any) {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-4 xl:col-span-3 w-full xl:max-w-[380px] xl:ml-auto rounded-2xl border border-white/10 bg-zinc-950/90 shadow-2xl overflow-hidden lg:sticky lg:top-4">
+        <Card className="lg:col-span-4 xl:col-span-3 w-full xl:max-w-[380px] xl:ml-auto rounded-none sm:rounded-2xl border-0 sm:border border-white/10 bg-zinc-950/90 shadow-2xl overflow-hidden lg:sticky lg:top-4 mt-2 sm:mt-0">
           <CardContent className="p-4 sm:p-5 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
             <Episode
               serverData={serverData}
@@ -265,7 +265,7 @@ export default function Description({ movie, serverData }: any) {
         </Card>
       </div>
 
-      <div className="w-full z-20">
+      <div className="w-full z-20 px-3 sm:px-0 mt-4 sm:mt-0">
         <Card className="w-full mt-0 rounded-2xl border border-white/10 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/95 shadow-2xl overflow-hidden">
           <CardContent className="p-4 sm:p-6 lg:p-8">
             <div className="flex flex-col gap-3">

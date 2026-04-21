@@ -153,18 +153,41 @@ export default function VideoPlayer({
 
   const toggleFullscreen = useCallback(async () => {
     if (!containerRef.current || !videoRef.current) return;
+    
     try {
-      const isCurrentlyFullscreen = !!(document.fullscreenElement || (document as any).webkitFullscreenElement);
+      // Check for iOS Safari specifically
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      const video = videoRef.current;
+      
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement || 
+        (document as any).webkitFullscreenElement || 
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+
       if (!isCurrentlyFullscreen) {
-        if (containerRef.current.requestFullscreen) await containerRef.current.requestFullscreen();
-        else if ((containerRef.current as any).webkitRequestFullscreen) await (containerRef.current as any).webkitRequestFullscreen();
+        if (containerRef.current.requestFullscreen) {
+          await containerRef.current.requestFullscreen();
+        } else if ((containerRef.current as any).webkitRequestFullscreen) {
+          await (containerRef.current as any).webkitRequestFullscreen();
+        } else if (isIOS && (video as any).webkitEnterFullscreen) {
+          // Special case for iPhone: use native video fullscreen
+          (video as any).webkitEnterFullscreen();
+          return; // The browser handles the state for native video fullscreen
+        }
         setIsFullscreen(true);
       } else {
-        if (document.exitFullscreen) await document.exitFullscreen();
-        else if ((document as any).webkitExitFullscreen) await (document as any).webkitExitFullscreen();
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        }
         setIsFullscreen(false);
       }
-    } catch (err) { console.error('Fullscreen error:', err); }
+    } catch (err) {
+      console.error('Fullscreen error:', err);
+    }
   }, []);
 
   const handlePlaybackRateChange = useCallback((rate: number) => {
@@ -317,6 +340,31 @@ export default function VideoPlayer({
     return () => video.removeEventListener('loadedmetadata', seek);
   }, [initialTime]);
 
+  // Fullscreen change listener
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement || 
+        (document as any).webkitFullscreenElement || 
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+      setIsFullscreen(isCurrentlyFullscreen);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   // PiP Storage Cleanup
   useEffect(() => {
     return () => {
@@ -345,7 +393,15 @@ export default function VideoPlayer({
 
   // 5. JSX
   return (
-    <div ref={containerRef} className={cn("relative bg-black group overflow-hidden select-none w-full aspect-video rounded-xl lg:rounded-2xl shadow-2xl", isFullscreen && "fixed inset-0 z-[99999] w-screen h-[100dvh] rounded-none")} onMouseMove={showControlsHandler} onMouseLeave={() => isPlaying && setShowControls(false)}>
+    <div 
+      ref={containerRef} 
+      className={cn(
+        "relative bg-black group overflow-hidden select-none w-full aspect-video rounded-xl lg:rounded-2xl shadow-2xl", 
+        isFullscreen && "fixed inset-0 z-[99999] w-screen h-[100dvh] rounded-none aspect-auto"
+      )} 
+      onMouseMove={showControlsHandler} 
+      onMouseLeave={() => isPlaying && setShowControls(false)}
+    >
       <video ref={videoRef} className="w-full h-full object-contain" poster={poster} playsInline crossOrigin="anonymous" />
       
       <div className="absolute inset-0 flex z-10">
