@@ -29,7 +29,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import MovieRating from "@/components/ui/movie-rating";
-import { Heart, Play } from "lucide-react";
+import { Heart, Play, SkipBack } from "lucide-react";
 import { getFavoriteMovies, toggleFavoriteMovie } from "@/lib/user-experience";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -289,16 +289,24 @@ export default function Description({ movie, serverData }: any) {
                 <h3 className="text-lg font-bold text-white">Nội dung phim</h3>
                 <p className="text-sm sm:text-base text-white/75 leading-relaxed break-words">{movie.content || "Chưa có thông tin nội dung phim."}</p>
                 <div className="flex flex-wrap gap-3">
-                  {resumeTime > 5 && (
+                  {resumeTime > 10 && (
                     <Button
                       onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          // Find video element and reset
+                          const video = document.querySelector('video');
+                          if (video) {
+                            video.currentTime = 0;
+                            video.play().catch(() => {});
+                          }
+                        }
                         setResumeTime(0);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="bg-primary/90 hover:bg-primary text-black font-semibold rounded-lg px-5 shadow-lg shadow-primary/20 ring-1 ring-primary/50"
+                      className="bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-lg px-5 border border-white/10"
                     >
-                      <Play className="w-4 h-4 mr-2" fill="currentColor" />
-                      Tiếp tục xem ({Math.floor(resumeTime / 60)}:{(resumeTime % 60).toFixed(0).padStart(2, '0')})
+                      <SkipBack className="w-4 h-4 mr-2" />
+                      Xem lại từ đầu
                     </Button>
                   )}
                   {movie.trailer_url && (

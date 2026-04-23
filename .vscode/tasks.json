@@ -6,6 +6,16 @@
 			"type": "shell",
 			"command": "npm run dev",
 			"isBackground": true
+		},
+		{
+			"label": "Deploy Cloudflare OpenNext",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"deploy:cf"
+			],
+			"isBackground": false
 		}
 	]
 }

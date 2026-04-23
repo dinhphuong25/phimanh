@@ -9,6 +9,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
+  distDir: ".next-build",
   // Disable source maps in production for security
   productionBrowserSourceMaps: false,
   compiler: {
