@@ -10,8 +10,6 @@ import HydrationFix from "@/components/ui/hydration-fix";
 import { SplashScreen } from "@/components/ui/splash-screen";
 
 import { PWAInstaller, PerformanceMonitor } from "@/components/pwa-init";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import SecurityGuard from "@/components/ui/security-guard";
 import PipWrapper from "@/components/player/pip-wrapper";
 import NotificationBanner from "@/components/ui/notification-banner";
@@ -161,8 +159,6 @@ export default function RootLayout({
         {/* Lazy-init sau khi page load */}
         <PWAInstaller />
         <PerformanceMonitor />
-        <Analytics />
-        <SpeedInsights />
         {/* Global PiP player — persist across navigation */}
         <PipWrapper />
         {/* PWA Notification prompt */}

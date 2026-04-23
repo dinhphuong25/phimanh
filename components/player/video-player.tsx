@@ -220,7 +220,7 @@ export default function VideoPlayer({
       const showFeedback = (icon: string, text?: string) => setShortcutFeedback({ icon, text, id: Date.now() });
 
       switch (e.code) {
-        case 'Space': case 'KeyK': togglePlay(); showFeedback(videoRef.current.paused ? 'pause' : 'play'); break;
+        case 'Space': case 'KeyK': togglePlay(); break;
         case 'ArrowRight': case 'KeyL': skip(10); setSkipAnimation({ side: 'right', id: Date.now() }); break;
         case 'ArrowLeft': case 'KeyJ': skip(-10); setSkipAnimation({ side: 'left', id: Date.now() }); break;
         case 'ArrowUp':
