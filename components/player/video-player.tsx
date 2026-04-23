@@ -490,7 +490,7 @@ export default function VideoPlayer({
           <h3 className="text-2xl font-bold text-white mb-2">Tập tiếp theo sau</h3>
           <div className="text-6xl font-black text-primary mb-8 animate-pulse">{countdown}s</div>
           <div className="flex gap-4">
-            <Button variant="outline" onClick={() => setCountdown(null)} className="rounded-full px-8">Hủy</Button>
+            <Button variant="outline" onClick={() => { if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current); setCountdown(null); }} className="rounded-full px-8">Hủy</Button>
             <Button className="bg-primary text-black font-bold rounded-full px-8" onClick={onNextEpisode}>Phát ngay</Button>
           </div>
         </div>

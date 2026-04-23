@@ -290,7 +290,13 @@ export default function Description({ movie, serverData }: any) {
                 <p className="text-sm sm:text-base text-white/75 leading-relaxed break-words">{movie.content || "Chưa có thông tin nội dung phim."}</p>
                 <div className="flex flex-wrap gap-3">
                   {resumeTime > 5 && (
-                    <Button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="bg-primary/90 hover:bg-primary text-black font-semibold rounded-lg px-5 shadow-lg shadow-primary/20 ring-1 ring-primary/50">
+                    <Button
+                      onClick={() => {
+                        setResumeTime(0);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="bg-primary/90 hover:bg-primary text-black font-semibold rounded-lg px-5 shadow-lg shadow-primary/20 ring-1 ring-primary/50"
+                    >
                       <Play className="w-4 h-4 mr-2" fill="currentColor" />
                       Tiếp tục xem ({Math.floor(resumeTime / 60)}:{(resumeTime % 60).toFixed(0).padStart(2, '0')})
                     </Button>
