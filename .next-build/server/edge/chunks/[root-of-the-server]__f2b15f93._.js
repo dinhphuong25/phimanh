@@ -115,6 +115,12 @@ function middleware(request) {
     const { pathname } = request.nextUrl;
     const userAgent = request.headers.get('user-agent');
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    // Canonical host normalization: redirect www to apex so Google indexes one URL set only.
+    if (request.nextUrl.hostname === 'www.rapphimchill.app') {
+        const canonicalUrl = request.nextUrl.clone();
+        canonicalUrl.hostname = 'rapphimchill.app';
+        return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$esm$2f$server$2f$web$2f$exports$2f$index$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__["NextResponse"].redirect(canonicalUrl, 308);
+    }
     // Anti-DDoS Rate Limiting
     if (ip !== 'unknown' && !checkRateLimit(ip)) {
         return new __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$esm$2f$server$2f$web$2f$exports$2f$index$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__["NextResponse"]('Too Many Requests - Anti DDoS Triggered', {

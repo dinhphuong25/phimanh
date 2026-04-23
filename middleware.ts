@@ -108,6 +108,13 @@ export function middleware(request: NextRequest) {
     const userAgent = request.headers.get('user-agent');
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
 
+    // Canonical host normalization: redirect www to apex so Google indexes one URL set only.
+    if (request.nextUrl.hostname === 'www.rapphimchill.app') {
+        const canonicalUrl = request.nextUrl.clone();
+        canonicalUrl.hostname = 'rapphimchill.app';
+        return NextResponse.redirect(canonicalUrl, 308);
+    }
+
     // Anti-DDoS Rate Limiting
     if (ip !== 'unknown' && !checkRateLimit(ip)) {
         return new NextResponse('Too Many Requests - Anti DDoS Triggered', { 
